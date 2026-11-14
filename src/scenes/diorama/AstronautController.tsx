@@ -1,4 +1,4 @@
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, useState, type MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { store } from '../../state/store';
@@ -10,6 +10,9 @@ import { colisionaConMuros, detectarModulo } from './collision';
 const VELOCIDAD = 4.2;
 const RADIO_JUGADOR = 0.26;
 const PISO_Y = 0.15;
+const EJE_Y = new THREE.Vector3(0, 1, 0);
+const forwardVec = new THREE.Vector3();
+const rightVec = new THREE.Vector3();
 
 export interface DestinoTactil {
   modulo: ModuleId;
@@ -22,6 +25,7 @@ interface AstronautControllerProps {
 }
 
 export function AstronautController({ destinoTactil, posicionRef }: AstronautControllerProps) {
+  const camera = useThree((estado) => estado.camera);
   const grupo = useRef<THREE.Group>(null);
   const pos = useRef({ x: 0.1, z: 0 });
   const rutaRef = useRef<PuntoRuta[]>([]);
@@ -58,11 +62,24 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
     const k = teclas.current;
-    let dx = (k.has('arrowright') || k.has('d') ? 1 : 0) - (k.has('arrowleft') || k.has('a') ? 1 : 0);
-    let dz = (k.has('arrowdown') || k.has('s') ? 1 : 0) - (k.has('arrowup') || k.has('w') ? 1 : 0);
+    const inputRight = (k.has('arrowright') || k.has('d') ? 1 : 0) - (k.has('arrowleft') || k.has('a') ? 1 : 0);
+    const inputForward = (k.has('arrowup') || k.has('w') ? 1 : 0) - (k.has('arrowdown') || k.has('s') ? 1 : 0);
 
-    const usaTeclado = dx !== 0 || dz !== 0;
+    let dx = 0;
+    let dz = 0;
+    const usaTeclado = inputRight !== 0 || inputForward !== 0;
     if (usaTeclado) {
+      camera.getWorldDirection(forwardVec);
+      forwardVec.y = 0;
+      if (forwardVec.lengthSq() > 0.0001) {
+        forwardVec.normalize();
+      } else {
+        forwardVec.set(0, 0, -1);
+      }
+      rightVec.crossVectors(forwardVec, EJE_Y).normalize();
+
+      dx = forwardVec.x * inputForward + rightVec.x * inputRight;
+      dz = forwardVec.z * inputForward + rightVec.z * inputRight;
       rutaRef.current = [];
     } else if (rutaRef.current.length > 0) {
       const objetivo = rutaRef.current[0];
