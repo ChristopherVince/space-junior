@@ -12,8 +12,8 @@ Este es el repositorio oficial de la entrega, creado el 14 de noviembre de 2026 
 
 | Carpeta | Frente | Responsabilidad |
 | --- | --- | --- |
-| `src/scenes/` | 1 · Base y movimiento | Escenas de Phaser, movimiento del jugador y cámara |
-| `prototype-3d/` | 1 · Escenario 3D | Mapa 3D isométrico de Mars Dune Alpha (React + Three.js + R3F + Drei) |
+| `src/scenes/diorama/` | 1 · Base y movimiento | Escenario 3D de Mars Dune Alpha (R3F/Drei), astronauta, cámara y colisiones (`collision.ts`) |
+| `prototype-3d/` | 1 · Referencia 3D | Prototipo inicial aislado (el mapa activo corre desde `src/main.tsx` en la raíz) |
 | `src/state/` | 2 · Estado y reglas | Estado centralizado (`store.ts`) y contrato compartido (`types.ts`) |
 | `src/bots/`, `src/ui/`, `src/i18n/` | 3 · Bots, diálogos e interfaz | Reglas de tripulación, HUD en HTML/CSS y textos ES/EN |
 | `src/data/`, `scripts/`, `.github/` | 4 · Datos, reporte y publicación | Datos de NASA (DONKI/CCMC), balance en JSON y CI/CD |
@@ -81,7 +81,12 @@ Los bots siguen reglas deterministas con diálogos escritos: caminan a su módul
 
 ## 5. Stack y Alcance
 
-- **Stack**: Phaser 3 + Vite + TypeScript + interfaz HTML/CSS superpuesta, publicado en GitHub Pages / Vercel. El escenario 3D isométrico del hábitat vive en `prototype-3d/` (React + Three.js + React Three Fiber + Drei), con vista limpia sin textos superpuestos, piso de cemento (`y` por encima del terreno para evitar oclusión por `Terrain`) y planta fiel a *Mars Dune Alpha*.
+- **Stack**: React + Three.js + React Three Fiber + Drei + Vite + TypeScript con HUD HTML/CSS superpuesto en `#interfaz`, publicado en GitHub Pages / Vercel desde la raíz (`src/main.tsx`).
+- **Reglas del escenario 3D**:
+  - El mapa 3D debe correr desde la raíz (`src/main.tsx` y `src/scenes/diorama/`), que es lo que compila `.github/workflows/deploy.yml` para GitHub Pages.
+  - `#app` y `#juego` en `src/style.css` deben usar `100vw × 100vh` (sin `max-width: 960px` ni `aspect-ratio` fijo) para evitar franjas negras alrededor del diorama.
+  - Piso de cemento (`y` por encima del terreno para evitar oclusión por `Terrain`) y planta fiel a *Mars Dune Alpha*.
+  - Cualquier muro agregado o movido en `MarsDuneAlphaMap.tsx` debe actualizar su caja AABB en `src/scenes/diorama/collision.ts`.
 - **Arte**: Personajes propios (sin imitar el estilo de Among Us). Prohibido usar el logotipo oficial de NASA.
 - **Mínimo viable (MVP)**: Base con movimiento, comandante + 3 bots, 3 recursos, 1 tormenta con pronóstico incierto, refugio, reporte final con fuentes, enlace publicado.
 - **Fuera de alcance**: Impostor/saboteador, motor de física complejo, físicas 3D, consola de hardware físico, LLMs en tiempo de ejecución para los bots.
