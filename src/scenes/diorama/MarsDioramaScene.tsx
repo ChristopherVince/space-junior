@@ -55,25 +55,19 @@ function Luces() {
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const dirRef = useRef<THREE.DirectionalLight>(null);
   const faseRef = useRef<Phase>(store.getState().fase);
-  const testRef = useRef(false);
 
   useEffect(() => {
     const desuscribir = store.subscribe((estado) => {
       faseRef.current = estado.fase;
     });
-    const alTest = (e: Event) => {
-      testRef.current = Boolean((e as CustomEvent<{ activa: boolean }>).detail?.activa);
-    };
-    window.addEventListener('test-tormenta', alTest);
     return () => {
       desuscribir();
-      window.removeEventListener('test-tormenta', alTest);
     };
   }, []);
 
   useFrame(({ clock }) => {
     const fase = faseRef.current;
-    const enTormenta = fase === 'tormenta' || testRef.current;
+    const enTormenta = fase === 'tormenta';
     const enRefugio = fase === 'refugio';
 
     if (enTormenta || enRefugio) {

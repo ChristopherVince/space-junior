@@ -26,8 +26,6 @@ interface BotState {
 /** Controla a los 3 bots de la tripulación y los lleva al refugio durante alerta/tormenta (Issue #4). */
 export function CrewController() {
   const gruposRef = useRef<Record<string, THREE.Group | null>>({});
-  const faseRef = useRef<Phase>(store.getState().fase);
-  const testRef = useRef(false);
 
   const estadoBots = useRef<Record<string, BotState>>(
     Object.fromEntries(
@@ -42,8 +40,8 @@ export function CrewController() {
   );
 
   useEffect(() => {
-    const actualizarDestinos = (fase: Phase, enTest: boolean) => {
-      const irARefugio = fase === 'refugio' || fase === 'tormenta' || enTest;
+    const actualizarDestinos = (fase: Phase) => {
+      const irARefugio = fase === 'refugio' || fase === 'tormenta';
       for (const b of BOTS) {
         const st = estadoBots.current[b.id];
         const nuevoDestino: ModuleId = irARefugio ? 'refugio' : store.getState().tripulacion[b.id].modulo;
@@ -55,20 +53,11 @@ export function CrewController() {
     };
 
     const desuscribir = store.subscribe((estado) => {
-      faseRef.current = estado.fase;
-      actualizarDestinos(estado.fase, testRef.current);
+      actualizarDestinos(estado.fase);
     });
 
-    const alTest = (e: Event) => {
-      const activa = Boolean((e as CustomEvent<{ activa: boolean }>).detail?.activa);
-      testRef.current = activa;
-      actualizarDestinos(faseRef.current, activa);
-    };
-
-    window.addEventListener('test-tormenta', alTest);
     return () => {
       desuscribir();
-      window.removeEventListener('test-tormenta', alTest);
     };
   }, []);
 

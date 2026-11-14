@@ -20,7 +20,6 @@ function reproducirBeep(ctx: AudioContext, fuerte: boolean) {
 export function StormEffects() {
   const [fase, setFase] = useState<Phase>(() => store.getState().fase);
   const [silenciado, setSilenciado] = useState(false);
-  const [testTormenta, setTestTormenta] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
@@ -30,8 +29,8 @@ export function StormEffects() {
     };
   }, []);
 
-  const enAlerta = fase === 'tormenta' || fase === 'refugio' || testTormenta;
-  const esTormenta = fase === 'tormenta' || testTormenta;
+  const enAlerta = fase === 'tormenta' || fase === 'refugio';
+  const esTormenta = fase === 'tormenta';
 
   // Alarma sonora
   useEffect(() => {
@@ -153,40 +152,13 @@ export function StormEffects() {
       rafId = window.requestAnimationFrame(animar);
     }
 
-    let botonTest: HTMLButtonElement | null = null;
-    if (import.meta.env.DEV) {
-      botonTest = document.createElement('button');
-      botonTest.type = 'button';
-      botonTest.textContent = testTormenta ? 'Detener test' : 'Test tormenta';
-      botonTest.style.position = 'fixed';
-      botonTest.style.bottom = '14px';
-      botonTest.style.right = '60px';
-      botonTest.style.zIndex = '25';
-      botonTest.style.padding = '6px 10px';
-      botonTest.style.borderRadius = '8px';
-      botonTest.style.border = '1px solid rgba(255,255,255,0.25)';
-      botonTest.style.background = testTormenta ? 'rgba(185, 28, 28, 0.85)' : 'rgba(15, 23, 42, 0.78)';
-      botonTest.style.color = '#f8fafc';
-      botonTest.style.fontSize = '12px';
-      botonTest.style.cursor = 'pointer';
-      botonTest.onclick = () => {
-        setTestTormenta((prev) => {
-          const next = !prev;
-          window.dispatchEvent(new CustomEvent('test-tormenta', { detail: { activa: next } }));
-          return next;
-        });
-      };
-      contenedor.appendChild(botonTest);
-    }
-
     return () => {
       if (rafId) window.cancelAnimationFrame(rafId);
       sandCanvas?.remove();
       overlay.remove();
       boton.remove();
-      botonTest?.remove();
     };
-  }, [enAlerta, esTormenta, silenciado, testTormenta]);
+  }, [enAlerta, esTormenta, silenciado]);
 
   return null;
 }

@@ -15,19 +15,13 @@ export function SolarStormVFX() {
   const materialRef = useRef<THREE.PointsMaterial>(null);
   const fogRef = useRef<THREE.FogExp2>(null);
   const faseRef = useRef<Phase>(store.getState().fase);
-  const testRef = useRef(false);
 
   useEffect(() => {
     const desuscribir = store.subscribe((estado) => {
       faseRef.current = estado.fase;
     });
-    const alTest = (e: Event) => {
-      testRef.current = Boolean((e as CustomEvent<{ activa: boolean }>).detail?.activa);
-    };
-    window.addEventListener('test-tormenta', alTest);
     return () => {
       desuscribir();
-      window.removeEventListener('test-tormenta', alTest);
     };
   }, []);
 
@@ -44,7 +38,7 @@ export function SolarStormVFX() {
   useFrame(({ clock }, delta) => {
     const dt = Math.min(delta, 0.05);
     const fase = faseRef.current;
-    const enTormenta = fase === 'tormenta' || testRef.current;
+    const enTormenta = fase === 'tormenta';
     const enRefugio = fase === 'refugio';
     const intensa = enTormenta || enRefugio;
 
