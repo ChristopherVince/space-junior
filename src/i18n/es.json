@@ -11,5 +11,11 @@
   "rol.cientifico": "Oficial científica (bot)",
   "bot.cientifico.invernadero": "Si cortas la energía del invernadero, mañana falta comida.",
   "bot.ingeniero.blindaje": "Si no reforzamos el refugio hoy, no da tiempo después.",
-  "bot.medico.dosis": "La tripulación ya lleva mucha dosis esta semana."
+  "bot.medico.dosis": "La tripulación ya lleva mucha dosis esta semana.",
+  "modulo.invernadero": "Invernadero",
+  "modulo.pasillo": "Pasillo central",
+  "modulo.energia": "Energía",
+  "modulo.refugio": "Refugio",
+  "modulo.comunicaciones": "Comunicaciones",
+  "modulo.enfermeria": "Enfermería"
 }

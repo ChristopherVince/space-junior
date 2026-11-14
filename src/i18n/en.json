@@ -11,5 +11,11 @@
   "rol.cientifico": "Science officer (bot)",
   "bot.cientifico.invernadero": "If you cut the greenhouse power, we run out of food tomorrow.",
   "bot.ingeniero.blindaje": "If we don't reinforce the shelter today, there won't be time later.",
-  "bot.medico.dosis": "The crew has already taken a lot of radiation this week."
+  "bot.medico.dosis": "The crew has already taken a lot of radiation this week.",
+  "modulo.invernadero": "Greenhouse",
+  "modulo.pasillo": "Central Corridor",
+  "modulo.energia": "Power",
+  "modulo.refugio": "Shelter",
+  "modulo.comunicaciones": "Comms",
+  "modulo.enfermeria": "Med Bay"
 }
