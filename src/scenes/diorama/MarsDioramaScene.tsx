@@ -1,5 +1,5 @@
 import { OrbitControls } from '@react-three/drei';
-import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
+import { useThree, type ThreeEvent } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { ModuleId } from '../../state/types';
@@ -13,6 +13,14 @@ import { MODULOS } from './layout';
 
 const ZOOM_MIN = 8.5;
 const ZOOM_MAX = 54;
+
+type VistaId = '1' | '2' | '3';
+
+const VISTAS: Record<VistaId, { posicion: [number, number, number]; target: [number, number, number] }> = {
+  '1': { posicion: [18, 18, 18], target: [0.1, 0.5, 0] },
+  '2': { posicion: [0.1, 28, 0.1], target: [0.1, 0.5, 0] },
+  '3': { posicion: [0, 9, 22], target: [0.1, 0.5, 0] },
+};
 
 const ZONAS_TOQUE: { id: ModuleId; x: number; z: number; w: number; d: number }[] = [
   { id: 'refugio', x: -8.1, z: 0, w: 3.8, d: 9.8 },
@@ -67,30 +75,30 @@ function Luces() {
 /** Escena 3D principal del juego: Mars Dune Alpha + comandante controlable por teclado y toque. */
 export function MarsDioramaScene() {
   const posicionJugadorRef = useRef({ x: 0.1, z: 0 });
-  const prevJugadorRef = useRef({ x: 0.1, z: 0 });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
   const camara = useThree((estado) => estado.camera);
   const [destinoTactil, setDestinoTactil] = useState<DestinoTactil | null>(null);
+  const [vista, setVista] = useState<VistaId>('1');
 
-  useFrame(() => {
-    const curr = posicionJugadorRef.current;
-    const prev = prevJugadorRef.current;
-    const dx = curr.x - prev.x;
-    const dz = curr.z - prev.z;
-
-    if (dx !== 0 || dz !== 0) {
-      if (controlsRef.current) {
-        controlsRef.current.target.x += dx;
-        controlsRef.current.target.z += dz;
-        controlsRef.current.update();
+  useEffect(() => {
+    const alPresionar = (e: KeyboardEvent) => {
+      if (e.key === '1' || e.key === '2' || e.key === '3') {
+        setVista(e.key);
       }
-      camara.position.x += dx;
-      camara.position.z += dz;
-      prev.x = curr.x;
-      prev.z = curr.z;
+    };
+    window.addEventListener('keydown', alPresionar);
+    return () => window.removeEventListener('keydown', alPresionar);
+  }, []);
+
+  useEffect(() => {
+    const config = VISTAS[vista];
+    camara.position.set(...config.posicion);
+    if (controlsRef.current) {
+      controlsRef.current.target.set(...config.target);
+      controlsRef.current.update();
     }
-  });
+  }, [vista, camara]);
 
   const alTocarModulo = (id: ModuleId) => (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();

@@ -83,6 +83,8 @@ Los bots siguen reglas deterministas con diálogos escritos: caminan a su módul
 
 - **Stack**: React + Three.js + React Three Fiber + Drei + Vite + TypeScript con HUD HTML/CSS superpuesto en `#interfaz`, publicado en GitHub Pages / Vercel desde la raíz (`src/main.tsx`).
 - **Reglas del escenario 3D**:
+  - Cámara fija con vistas `1`/`2`/`3` y rotación/zoom manual con el mouse (`OrbitControls`); no seguir automáticamente al astronauta.
+  - Movimiento de teclado (`WASD`/Flechas) relativo a la rotación horizontal (plano X/Z) de la cámara activa.
   - El mapa 3D debe correr desde la raíz (`src/main.tsx` y `src/scenes/diorama/`), que es lo que compila `.github/workflows/deploy.yml` para GitHub Pages.
   - `#app` y `#juego` en `src/style.css` deben usar `100vw × 100vh` (sin `max-width: 960px` ni `aspect-ratio` fijo) para evitar franjas negras alrededor del diorama.
   - Piso de cemento (`y` por encima del terreno para evitar oclusión por `Terrain`) y planta fiel a *Mars Dune Alpha*.

@@ -95,3 +95,4 @@ export function calcularRutaFija(desdeX: number, desdeZ: number, destino: Module
   }
   return [NODOS[fin]];
 }
+
