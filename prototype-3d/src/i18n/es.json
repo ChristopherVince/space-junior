@@ -1,0 +1,20 @@
+{
+  "escena.etiqueta": "Space Junior · Mapa 3D",
+  "escena.titulo": "Mars Dune Alpha",
+  "escena.subtitulo": "Mapa isométrico del hábitat marciano CHAPEA con sus áreas interiores y paneles solares.",
+  "escena.pista": "Arrastra para girar · rueda o pinza para acercar · toca un área para identificarla",
+  "escena.idioma": "Idioma",
+  "escena.vistaCompleta": "Vista completa",
+  "modulo.habitat": "Recreación y Comedor",
+  "modulo.habitat.rol": "Zona común central y cocina",
+  "modulo.invernadero": "Área de cultivos (Invernadero)",
+  "modulo.invernadero.rol": "Cultivos hidropónicos y servicio",
+  "modulo.enfermeria": "Sala de tratamiento",
+  "modulo.enfermeria.rol": "Atención médica y dosis de radiación",
+  "modulo.energia": "Paneles solares",
+  "modulo.energia.rol": "Generación y acumuladores",
+  "modulo.dormitorios": "Habitaciones 1–4",
+  "modulo.dormitorios.rol": "Alojamiento y refugio de tripulación",
+  "modulo.investigacion": "Trabajo e investigación",
+  "modulo.investigacion.rol": "Ciencia, comunicaciones y robótica"
+}

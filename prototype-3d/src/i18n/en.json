@@ -1,0 +1,20 @@
+{
+  "escena.etiqueta": "Space Junior · 3D Map",
+  "escena.titulo": "Mars Dune Alpha",
+  "escena.subtitulo": "Isometric map of the CHAPEA Martian habitat with interior zones and solar array.",
+  "escena.pista": "Drag to orbit · wheel or pinch to zoom · tap an area to identify it",
+  "escena.idioma": "Language",
+  "escena.vistaCompleta": "Full view",
+  "modulo.habitat": "Recreation & Galley",
+  "modulo.habitat.rol": "Central common area and dining",
+  "modulo.invernadero": "Crop Area (Greenhouse)",
+  "modulo.invernadero.rol": "Hydroponic crops and utility",
+  "modulo.enfermeria": "Medical Bay",
+  "modulo.enfermeria.rol": "Treatment room and radiation tracking",
+  "modulo.energia": "Solar Array",
+  "modulo.energia.rol": "Power generation and batteries",
+  "modulo.dormitorios": "Crew Quarters 1–4",
+  "modulo.dormitorios.rol": "Private pods and storm shelter",
+  "modulo.investigacion": "Work & Research",
+  "modulo.investigacion.rol": "Science, comms and robotics"
+}
