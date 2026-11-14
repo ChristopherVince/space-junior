@@ -1,0 +1,7 @@
+{
+  "_nota": "Valores provisionales de juego, no datos de NASA. Se ajustan desde la hoja de balance.",
+  "energiaPorSol": 10,
+  "horasPorSol": 24.65,
+  "consumoSoporteVitalPorHora": 1,
+  "blindajePorUnidad": 10
+}

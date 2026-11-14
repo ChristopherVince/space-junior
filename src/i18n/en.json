@@ -1,0 +1,15 @@
+{
+  "hud.energia": "Power",
+  "hud.soporteVital": "Life support",
+  "hud.blindaje": "Shielding",
+  "hud.tormenta": "Storm: arrives in {horas} h ± {margen} h",
+  "dialogo.decidir": "Decide",
+  "dialogo.aceptar": "Give power",
+  "dialogo.rechazar": "Not now",
+  "rol.ingeniero": "Flight engineer (bot)",
+  "rol.medico": "Medical officer (bot)",
+  "rol.cientifico": "Science officer (bot)",
+  "bot.cientifico.invernadero": "If you cut the greenhouse power, we run out of food tomorrow.",
+  "bot.ingeniero.blindaje": "If we don't reinforce the shelter today, there won't be time later.",
+  "bot.medico.dosis": "The crew has already taken a lot of radiation this week."
+}

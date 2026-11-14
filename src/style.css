@@ -1,0 +1,56 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  background: #1a100b;
+  color: #f5f2ec;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+}
+
+#app {
+  position: relative;
+  width: min(100vw, 960px);
+}
+
+#juego {
+  aspect-ratio: 960 / 600;
+}
+
+.hud {
+  position: absolute;
+  inset: 8px 8px auto 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 15px;
+}
+
+.alerta {
+  margin-left: auto;
+  padding: 2px 10px;
+  border: 2px solid #e24b4a;
+  border-radius: 8px;
+}
+
+.dialogo {
+  position: absolute;
+  inset: auto 8px 8px 8px;
+  padding: 12px 16px;
+  background: #0e1726;
+  border: 1px solid #d8c3a5;
+  border-radius: 8px;
+}
+
+.dialogo p {
+  margin: 4px 0 8px;
+}
+
+.dialogo button {
+  margin-right: 8px;
+  padding: 6px 14px;
+  font: inherit;
+}

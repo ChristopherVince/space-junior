@@ -1,0 +1,15 @@
+{
+  "hud.energia": "Energía",
+  "hud.soporteVital": "Soporte vital",
+  "hud.blindaje": "Blindaje",
+  "hud.tormenta": "Tormenta: llega en {horas} h ± {margen} h",
+  "dialogo.decidir": "Decidir",
+  "dialogo.aceptar": "Dar energía",
+  "dialogo.rechazar": "Ahora no",
+  "rol.ingeniero": "Ingeniera de vuelo (bot)",
+  "rol.medico": "Oficial médico (bot)",
+  "rol.cientifico": "Oficial científica (bot)",
+  "bot.cientifico.invernadero": "Si cortas la energía del invernadero, mañana falta comida.",
+  "bot.ingeniero.blindaje": "Si no reforzamos el refugio hoy, no da tiempo después.",
+  "bot.medico.dosis": "La tripulación ya lleva mucha dosis esta semana."
+}

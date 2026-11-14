@@ -1,0 +1,16 @@
+{
+  "_nota": "Lo genera scripts/fetch_events.py con datos reales de DONKI y CME Scoreboard. El evento de abajo es solo un EJEMPLO con valores de prueba; no mostrarlo como dato real.",
+  "eventos": [
+    {
+      "id": "ejemplo",
+      "esEjemplo": true,
+      "fecha": "2024-05-20",
+      "descripcion": "Evento de ejemplo para desarrollo",
+      "horasPronosticadas": 48,
+      "margenHoras": 5,
+      "horasReales": 41,
+      "dosisReferenciaMicrogray": 8100,
+      "fuente": "https://www.nasa.gov/solar-system/planets/mars/nasa-watches-mars-light-up-during-epic-solar-storm"
+    }
+  ]
+}
