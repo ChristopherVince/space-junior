@@ -11,10 +11,20 @@ export type ModuleId =
 
 export type CrewId = 'comandante' | 'ingeniero' | 'medico' | 'cientifico';
 
+// Fases de una partida, en orden:
+// - 'preparacion': el jugador reparte energía; la tormenta aún no llega.
+// - 'refugio': alerta temprana (solo si Comunicaciones tiene energía). Todos deben
+//   correr al refugio; todavía no hay radiación extra.
+// - 'tormenta': radiación activa. Quien no esté en el refugio recibe la dosis completa.
+//   Si no hubo alerta, se pasa directo de 'preparacion' a 'tormenta'.
+// - 'reporte': fin de la partida (ver motivoFin).
+// La escena debe llevar a la tripulación al refugio cuando la fase sea 'refugio' o 'tormenta'.
 export type Phase = 'aviso' | 'preparacion' | 'tormenta' | 'refugio' | 'reporte';
 
+export type MotivoFin = 'tormentaSuperada' | 'sinSoporteVital';
+
 export interface Resources {
-  energia: number; // unidades disponibles en el sol actual
+  energia: number; // unidades sin asignar (el total por sol está en balance.json)
   soporteVital: number; // 0-100: oxígeno y comida
   blindaje: number; // 0-100: protección del refugio
 }
@@ -43,6 +53,9 @@ export interface GameState {
   eventoId: string | null; // id del evento real en src/data/events.json
   tripulacion: Record<CrewId, CrewMember>;
   peticionActiva: { de: CrewId; textoId: string } | null;
+  pausado: boolean; // el reloj no avanza (también se detiene solo si hay petición activa)
+  horaInicioTormenta: number | null; // hora en que empezó la radiación
+  motivoFin: MotivoFin | null; // por qué terminó la partida (solo en fase 'reporte')
 }
 
 export type Action =
@@ -53,4 +66,5 @@ export type Action =
   | { type: 'MOSTRAR_PETICION'; de: CrewId; textoId: string }
   | { type: 'RESOLVER_PETICION'; aceptada: boolean }
   | { type: 'IR_AL_REFUGIO' }
-  | { type: 'TERMINAR_PARTIDA' };
+  | { type: 'PAUSAR'; pausado: boolean }
+  | { type: 'TERMINAR_PARTIDA'; motivo: MotivoFin };
