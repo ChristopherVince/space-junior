@@ -1,13 +1,17 @@
 import { OrbitControls } from '@react-three/drei';
-import { useThree, type ThreeEvent } from '@react-three/fiber';
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import type { ModuleId } from '../../state/types';
+import { store } from '../../state/store';
+import type { ModuleId, Phase } from '../../state/types';
 import { AstronautController, type DestinoTactil } from './AstronautController';
+import { CrewController } from './CrewController';
 import { MarsDuneAlphaMap } from './MarsDuneAlphaMap';
 import { Pathways } from './Pathways';
 import { Rocks } from './Rocks';
 import { SolarArray } from './SolarArray';
+import { SolarStormVFX } from './SolarStormVFX';
+import { StormEffects } from './StormEffects';
 import { Terrain } from './Terrain';
 import { MODULOS } from './layout';
 
@@ -48,11 +52,50 @@ function CamaraIsometrica() {
 }
 
 function Luces() {
+  const ambientRef = useRef<THREE.AmbientLight>(null);
+  const dirRef = useRef<THREE.DirectionalLight>(null);
+  const faseRef = useRef<Phase>(store.getState().fase);
+
+  useEffect(() => {
+    const desuscribir = store.subscribe((estado) => {
+      faseRef.current = estado.fase;
+    });
+    return () => {
+      desuscribir();
+    };
+  }, []);
+
+  useFrame(({ clock }) => {
+    const fase = faseRef.current;
+    const enTormenta = fase === 'tormenta';
+    const enRefugio = fase === 'refugio';
+
+    if (enTormenta || enRefugio) {
+      const pulso = 0.5 + 0.5 * Math.sin(clock.elapsedTime * (enTormenta ? 7 : 4));
+      if (ambientRef.current) {
+        ambientRef.current.intensity = enTormenta ? 0.55 + pulso * 0.65 : 0.75 + pulso * 0.45;
+        ambientRef.current.color.setRGB(1, 0.55 + pulso * 0.35, 0.48 + pulso * 0.35);
+      }
+      if (dirRef.current) {
+        dirRef.current.intensity = enTormenta ? 1.1 + pulso * 1.1 : 1.4 + pulso * 0.7;
+      }
+    } else {
+      if (ambientRef.current) {
+        ambientRef.current.intensity = 1.0;
+        ambientRef.current.color.set('#fff5ea');
+      }
+      if (dirRef.current) {
+        dirRef.current.intensity = 1.85;
+      }
+    }
+  });
+
   return (
     <>
-      <ambientLight intensity={1.0} color="#fff5ea" />
+      <ambientLight ref={ambientRef} intensity={1.0} color="#fff5ea" />
       <hemisphereLight args={['#ffedd6', '#c47a58', 0.65]} />
       <directionalLight
+        ref={dirRef}
         position={[16, 22, 12]}
         intensity={1.85}
         color="#fff6e6"
@@ -110,6 +153,8 @@ export function MarsDioramaScene() {
     <>
       <CamaraIsometrica />
       <Luces />
+      <SolarStormVFX />
+      <StormEffects />
 
       <OrbitControls
         ref={controlsRef}
@@ -146,6 +191,7 @@ export function MarsDioramaScene() {
         ))}
 
         <AstronautController destinoTactil={destinoTactil} posicionRef={posicionJugadorRef} />
+        <CrewController />
       </group>
     </>
   );
