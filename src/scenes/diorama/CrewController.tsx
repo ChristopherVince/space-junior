@@ -103,7 +103,7 @@ export function CrewController() {
             gruposRef.current[b.id] = el;
           }}
         >
-          <Astronaut caminando={false} />
+          <Astronaut caminando={false} rol={b.id} />
         </group>
       ))}
     </>
