@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 // base relativa para que funcione en GitHub Pages (https://<usuario>.github.io/space-junior/).
 export default defineConfig({
+  plugins: [react()],
   base: './',
-  build: { chunkSizeWarningLimit: 2000 }, // Phaser pesa ~1.5 MB; es normal
+  build: { chunkSizeWarningLimit: 2000 },
 });
