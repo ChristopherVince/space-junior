@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { store } from '../../state/store';
 import type { ModuleId, Phase } from '../../state/types';
 import { AstronautController, type DestinoTactil } from './AstronautController';
+import { CrewController } from './CrewController';
 import { MarsDuneAlphaMap } from './MarsDuneAlphaMap';
 import { Pathways } from './Pathways';
 import { Rocks } from './Rocks';
@@ -196,6 +197,7 @@ export function MarsDioramaScene() {
         ))}
 
         <AstronautController destinoTactil={destinoTactil} posicionRef={posicionJugadorRef} />
+        <CrewController />
       </group>
     </>
   );
