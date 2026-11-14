@@ -3,6 +3,7 @@ import './style.css';
 import { revisarBots } from './bots/bots';
 import eventos from './data/events.json';
 import { BaseScene } from './scenes/BaseScene';
+import { iniciarReloj } from './state/reloj';
 import { store } from './state/store';
 import { montarHud } from './ui/hud';
 
@@ -28,8 +29,4 @@ store.dispatch({
   },
 });
 
-// TODO(Frente 2): reemplazar por el reloj real del juego (horas por segundo).
-setInterval(() => {
-  store.dispatch({ type: 'AVANZAR_HORAS', horas: 1 });
-  revisarBots();
-}, 2000);
+iniciarReloj(revisarBots);
