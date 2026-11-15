@@ -1,12 +1,31 @@
-// Frente 3 · HUD: cápsula central de recursos, aviso de tormenta arriba a la derecha
-// y botones laterales estáticos de referencia.
+// Frente 3 · HUD: cápsula central de recursos, aviso de tormenta arriba a la derecha,
+// menú de pausa (#46) y paneles laterales interactivos (#45: Módulos, Tareas, Tripulación, Registro).
 import balance from '../data/balance.json';
-import { t } from '../i18n';
+import { getIdioma, t } from '../i18n';
+import { abandonarPartida } from '../state/partida';
 import { store } from '../state/store';
-import type { CrewId, GameState } from '../state/types';
+import type { CrewId, GameState, ModuleId } from '../state/types';
+import type { ControlFuentes } from './fuentes';
 import { montarPanelModulo } from './panelModulo';
+import {
+  formatearEntradaRegistro,
+  iniciarSeguimientoRegistro,
+  obtenerEntradasRegistro,
+} from './registro';
 
 type BotId = Exclude<CrewId, 'comandante'>;
+export type PanelLateralId = 'modulos' | 'tareas' | 'tripulacion' | 'registro';
+
+const MODULOS_ORDEN: readonly ModuleId[] = [
+  'invernadero',
+  'energia',
+  'comunicaciones',
+  'enfermeria',
+  'refugio',
+  'pasillo',
+];
+
+const TRIPULACION_ORDEN: readonly CrewId[] = ['comandante', 'ingeniero', 'medico', 'cientifico'];
 
 const COLOR_BOT: Record<BotId, { primario: string; secundario: string }> = {
   cientifico: { primario: '#d98a3c', secundario: '#78b856' },
@@ -30,26 +49,17 @@ function retratoBot(quien: BotId): string {
           <stop offset="100%" stop-color="#152642"/>
         </linearGradient>
       </defs>
-      <!-- Fondo circular suave -->
       <circle cx="48" cy="48" r="44" fill="#f2d6c1" stroke="#fff8f0" stroke-width="3"/>
-      <!-- Mochila espacial -->
       <rect x="22" y="42" width="52" height="36" rx="10" fill="#d9cfc5"/>
-      <!-- Orejeras del casco con el color del bot -->
       <rect x="13" y="34" width="10" height="18" rx="5" fill="${c.primario}"/>
       <rect x="73" y="34" width="10" height="18" rx="5" fill="${c.primario}"/>
-      <!-- Traje / torso -->
       <path d="M22 86 C22 66, 74 66, 74 86 Z" fill="#f7f4ef" stroke="#d5c7b8" stroke-width="2"/>
       <rect x="34" y="70" width="28" height="14" rx="4" fill="${c.secundario}" opacity="0.9"/>
       <circle cx="48" cy="77" r="3.5" fill="#fff8f0"/>
-      <!-- Casco redondeado -->
       <rect x="20" y="16" width="56" height="50" rx="25" fill="#fbf9f5" stroke="#ded2c5" stroke-width="2"/>
-      <!-- Franja superior del color del bot -->
       <path d="M36 17 Q48 14 60 17 L57 24 Q48 22 39 24 Z" fill="${c.primario}"/>
-      <!-- Visor azul espacial -->
       <rect x="27" y="26" width="42" height="30" rx="15" fill="url(#visor-${quien})" stroke="#d5c7b8" stroke-width="2"/>
-      <!-- Brillo del visor -->
       <ellipse cx="36" cy="33" rx="6" ry="3" transform="rotate(-18 36 33)" fill="#ffffff" opacity="0.45"/>
-      <!-- Ojos amigables en el visor -->
       <rect x="37" y="38" width="5" height="9" rx="2.5" fill="#e6f4ff"/>
       <rect x="54" y="38" width="5" height="9" rx="2.5" fill="#e6f4ff"/>
     </svg>`;
@@ -67,8 +77,8 @@ const ICONO_CAPAS = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none"
 const ICONO_TAREAS = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/></svg>`;
 const ICONO_TRIPULACION = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
 const ICONO_REGISTRO = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
+const ICONO_PAUSA = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`;
 
-/** Un chip de recurso dentro de la cápsula central: icono a la izq + (% y barra) a la der */
 function chip(clase: 'energia' | 'soporte' | 'blindaje', labelKey: string, pct: number): string {
   const bajo = pct < UMBRAL_BAJO;
   return `
@@ -87,7 +97,6 @@ function chip(clase: 'energia' | 'soporte' | 'blindaje', labelKey: string, pct: 
     </div>`;
 }
 
-/** Píldora de aviso de tormenta en la esquina superior derecha */
 function avisoTormenta(e: GameState): string {
   const p = e.pronostico;
   if (!p) return '';
@@ -122,44 +131,345 @@ function avisoTormenta(e: GameState): string {
     </div>`;
 }
 
-/** Menú lateral derecho estático (Módulos, Tareas, Tripulación, Registro) */
-function menuLateralEstatico(): string {
-  return `
-    <aside class="hud-menu-lateral" aria-label="Menú de base">
-      <div class="hud-menu-btn">
-        <span class="hud-menu-btn__icono">${ICONO_CAPAS}</span>
-        <span class="hud-menu-btn__texto">${t('hud.menu.modulos')}</span>
-      </div>
-      <div class="hud-menu-btn">
-        <span class="hud-menu-btn__icono">${ICONO_TAREAS}</span>
-        <span class="hud-menu-btn__texto">${t('hud.menu.tareas')}</span>
-      </div>
-      <div class="hud-menu-btn">
-        <span class="hud-menu-btn__icono">${ICONO_TRIPULACION}</span>
-        <span class="hud-menu-btn__texto">${t('hud.menu.tripulacion')}</span>
-      </div>
-      <div class="hud-menu-btn">
-        <span class="hud-menu-btn__icono">${ICONO_REGISTRO}</span>
-        <span class="hud-menu-btn__texto">${t('hud.menu.registro')}</span>
-      </div>
-    </aside>`;
+/** Calcula las tareas recomendadas para un niño según la fase y recursos actuales (#45). */
+export function calcularTareas(e: GameState): { clave: string; urgente?: boolean }[] {
+  if (e.fase === 'refugio' || e.fase === 'tormenta') {
+    if (e.tripulacion.comandante.modulo !== 'refugio') {
+      return [{ clave: 'panelLateral.tareas.refugio', urgente: true }];
+    }
+    return [{ clave: 'panelLateral.tareas.enRefugio', urgente: true }];
+  }
+
+  const tareas: { clave: string; urgente?: boolean }[] = [];
+  if ((e.energiaAsignada.invernadero ?? 0) < 3) {
+    tareas.push({ clave: 'panelLateral.tareas.invernadero', urgente: e.recursos.soporteVital < 70 });
+  }
+  if (e.recursos.blindaje < 60 && (e.energiaAsignada.energia ?? 0) < 4) {
+    tareas.push({ clave: 'panelLateral.tareas.blindaje', urgente: true });
+  }
+  if ((e.energiaAsignada.comunicaciones ?? 0) < 1) {
+    tareas.push({ clave: 'panelLateral.tareas.comunicaciones' });
+  }
+  if ((e.energiaAsignada.enfermeria ?? 0) < 1 && e.tripulacion.comandante.dosis >= 60) {
+    tareas.push({ clave: 'panelLateral.tareas.enfermeria' });
+  }
+  if (tareas.length === 0) {
+    tareas.push({ clave: 'panelLateral.tareas.listo' });
+  }
+  return tareas;
 }
 
-export function montarHud(raiz: HTMLElement) {
+function renderizarContenidoPanel(panel: PanelLateralId, e: GameState): { titulo: string; cuerpo: string } {
+  if (panel === 'modulos') {
+    const items = MODULOS_ORDEN.map((id) => {
+      const unidades = e.energiaAsignada[id] ?? 0;
+      const esPasillo = id === 'pasillo';
+      return `
+        <li class="hud-panel__item">
+          <div class="hud-panel__item-cabecera">
+            <strong>${t(`modulo.${id}`)}</strong>
+            ${
+              esPasillo
+                ? ''
+                : `<span class="hud-panel__badge">⚡ ${t('panelLateral.modulos.energia', { unidades })}</span>`
+            }
+          </div>
+          <p class="hud-panel__item-desc">${t(`panelModulo.desc.${id}`)}</p>
+        </li>`;
+    }).join('');
+    return {
+      titulo: t('panelLateral.modulos.titulo'),
+      cuerpo: `<ul class="hud-panel__lista">${items}</ul>`,
+    };
+  }
+
+  if (panel === 'tareas') {
+    const tareas = calcularTareas(e);
+    const items = tareas
+      .map(
+        (item) => `
+        <li class="hud-panel__item ${item.urgente ? 'hud-panel__item--urgente' : ''}">
+          <p class="hud-panel__item-desc">${t(item.clave)}</p>
+        </li>`,
+      )
+      .join('');
+    return {
+      titulo: t('panelLateral.tareas.titulo'),
+      cuerpo: `<ul class="hud-panel__lista">${items}</ul>`,
+    };
+  }
+
+  if (panel === 'tripulacion') {
+    const fmt = new Intl.NumberFormat(getIdioma(), { maximumFractionDigits: 0 });
+    const items = TRIPULACION_ORDEN.map((id) => {
+      const m = e.tripulacion[id];
+      const dosis = fmt.format(Math.round(m.dosis));
+      return `
+        <li class="hud-panel__item">
+          <div class="hud-panel__item-cabecera">
+            <strong>${t(`reporte.rol.${id}`)}</strong>
+            <span class="hud-panel__badge">${t('panelLateral.tripulacion.dosis', { dosis })}</span>
+          </div>
+          <p class="hud-panel__item-desc">${t('panelLateral.tripulacion.ubicacion', { modulo: t(`modulo.${m.modulo}`) })}</p>
+        </li>`;
+    }).join('');
+    return {
+      titulo: t('panelLateral.tripulacion.titulo'),
+      cuerpo: `<ul class="hud-panel__lista">${items}</ul>`,
+    };
+  }
+
+  const entradas = obtenerEntradasRegistro();
+  if (entradas.length === 0) {
+    return {
+      titulo: t('panelLateral.registro.titulo'),
+      cuerpo: `<p class="hud-panel__vacio">${t('panelLateral.registro.vacio')}</p>`,
+    };
+  }
+  const items = [...entradas]
+    .reverse()
+    .map(
+      (item) => `
+      <li class="hud-panel__item">
+        <div class="hud-panel__item-cabecera">
+          <span class="hud-panel__hora">${t('panelLateral.registro.hora', { sol: item.sol, hora: item.hora })}</span>
+        </div>
+        <p class="hud-panel__item-desc">${formatearEntradaRegistro(item)}</p>
+      </li>`,
+    )
+    .join('');
+  return {
+    titulo: t('panelLateral.registro.titulo'),
+    cuerpo: `<ul class="hud-panel__lista">${items}</ul>`,
+  };
+}
+
+export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
+  iniciarSeguimientoRegistro();
+
   const hud = document.createElement('div');
   hud.className = 'hud';
+
+  const hudEstado = document.createElement('div');
+  hudEstado.className = 'hud-estado';
+
+  const btnPausa = document.createElement('button');
+  btnPausa.type = 'button';
+  btnPausa.className = 'hud-pausa-btn';
+  btnPausa.setAttribute('aria-haspopup', 'dialog');
+
+  const menuLateral = document.createElement('aside');
+  menuLateral.className = 'hud-menu-lateral';
+
+  const backdropPanel = document.createElement('div');
+  backdropPanel.className = 'hud-panel-backdrop';
+  backdropPanel.hidden = true;
+
+  const panelLateral = document.createElement('aside');
+  panelLateral.className = 'hud-panel-lateral';
+  panelLateral.setAttribute('role', 'dialog');
+  panelLateral.setAttribute('aria-labelledby', 'hud-panel-titulo');
+  panelLateral.hidden = true;
+
   const dialogo = document.createElement('div');
   dialogo.className = 'dialogo';
   dialogo.hidden = true;
-  raiz.append(hud, dialogo);
+
+  const modalPausa = document.createElement('dialog');
+  modalPausa.className = 'pausa-dialogo';
+  modalPausa.setAttribute('aria-labelledby', 'pausa-titulo');
+
+  hud.append(hudEstado, btnPausa, menuLateral, backdropPanel, panelLateral);
+  raiz.append(hud, dialogo, modalPausa);
   montarPanelModulo(raiz);
 
+  let panelActivo: PanelLateralId | null = null;
+  let estabaPausadoAntesPanel = false;
+  let estabaPausadoAntesModal = false;
+  let confirmandoAbandono = false;
+
+  const pintarMenuLateral = () => {
+    const botones: { id: PanelLateralId; icono: string; clave: string }[] = [
+      { id: 'modulos', icono: ICONO_CAPAS, clave: 'hud.menu.modulos' },
+      { id: 'tareas', icono: ICONO_TAREAS, clave: 'hud.menu.tareas' },
+      { id: 'tripulacion', icono: ICONO_TRIPULACION, clave: 'hud.menu.tripulacion' },
+      { id: 'registro', icono: ICONO_REGISTRO, clave: 'hud.menu.registro' },
+    ];
+    menuLateral.setAttribute('aria-label', t('hud.titulo'));
+    menuLateral.innerHTML = botones
+      .map((b) => {
+        const activo = panelActivo === b.id;
+        return `
+          <button
+            type="button"
+            class="hud-menu-btn ${activo ? 'hud-menu-btn--activo' : ''}"
+            data-panel="${b.id}"
+            aria-pressed="${activo}"
+          >
+            <span class="hud-menu-btn__icono" aria-hidden="true">${b.icono}</span>
+            <span class="hud-menu-btn__texto">${t(b.clave)}</span>
+          </button>`;
+      })
+      .join('');
+  };
+
+  const pintarPanelLateral = (e: GameState) => {
+    if (!panelActivo) {
+      panelLateral.hidden = true;
+      backdropPanel.hidden = true;
+      return;
+    }
+    panelLateral.hidden = false;
+    backdropPanel.hidden = false;
+    const { titulo, cuerpo } = renderizarContenidoPanel(panelActivo, e);
+    panelLateral.innerHTML = `
+      <div class="hud-panel__cabecera">
+        <h2 id="hud-panel-titulo" class="hud-panel__titulo">${titulo}</h2>
+        <button type="button" class="hud-panel__cerrar" data-cerrar-panel="1" aria-label="${t('panelLateral.cerrar')}">✕</button>
+      </div>
+      <div class="hud-panel__cuerpo">
+        ${cuerpo}
+      </div>
+    `;
+  };
+
+  const cerrarPanelLateral = (restaurarPausa = true) => {
+    if (!panelActivo) return;
+    panelActivo = null;
+    panelLateral.hidden = true;
+    backdropPanel.hidden = true;
+    pintarMenuLateral();
+    if (restaurarPausa && !estabaPausadoAntesPanel && !modalPausa.open) {
+      store.dispatch({ type: 'PAUSAR', pausado: false });
+    }
+  };
+
+  const abrirPanelLateral = (id: PanelLateralId) => {
+    if (panelActivo === id) {
+      cerrarPanelLateral(true);
+      return;
+    }
+    if (!panelActivo) {
+      estabaPausadoAntesPanel = store.getState().pausado;
+      if (!estabaPausadoAntesPanel) {
+        store.dispatch({ type: 'PAUSAR', pausado: true });
+      }
+    }
+    panelActivo = id;
+    pintarMenuLateral();
+    pintarPanelLateral(store.getState());
+  };
+
+  const pintarModalPausa = () => {
+    modalPausa.innerHTML = `
+      <div class="pausa-dialogo__contenido">
+        <h1 id="pausa-titulo" class="pausa-dialogo__titulo">${t('pausa.titulo')}</h1>
+        ${
+          confirmandoAbandono
+            ? `
+              <p class="pausa-dialogo__confirmar">${t('pausa.confirmar')}</p>
+              <div class="pausa-dialogo__acciones">
+                <button type="button" class="dialogo__btn dialogo__btn--si" data-pausa="confirmar-si">${t('pausa.confirmarSi')}</button>
+                <button type="button" class="dialogo__btn dialogo__btn--no" data-pausa="confirmar-no">${t('pausa.confirmarNo')}</button>
+              </div>
+            `
+            : `
+              <div class="pausa-dialogo__acciones">
+                <button type="button" class="dialogo__btn dialogo__btn--si" data-pausa="continuar">${t('pausa.continuar')}</button>
+                <button type="button" class="dialogo__btn dialogo__btn--no" data-pausa="fuentes">${t('fuentes.abrir')}</button>
+                <button type="button" class="dialogo__btn dialogo__btn--no pausa-dialogo__abandonar" data-pausa="abandonar">${t('pausa.abandonar')}</button>
+              </div>
+            `
+        }
+      </div>
+    `;
+  };
+
+  const abrirModalPausa = () => {
+    if (modalPausa.open) return;
+    if (panelActivo) {
+      cerrarPanelLateral(false);
+      estabaPausadoAntesModal = estabaPausadoAntesPanel;
+    } else {
+      estabaPausadoAntesModal = store.getState().pausado;
+    }
+    confirmandoAbandono = false;
+    pintarModalPausa();
+    modalPausa.showModal();
+    if (!store.getState().pausado) {
+      store.dispatch({ type: 'PAUSAR', pausado: true });
+    }
+  };
+
+  btnPausa.addEventListener('click', () => abrirModalPausa());
+
+  modalPausa.addEventListener('close', () => {
+    confirmandoAbandono = false;
+    const fase = store.getState().fase;
+    if (fase !== 'aviso' && fase !== 'reporte' && !estabaPausadoAntesModal) {
+      store.dispatch({ type: 'PAUSAR', pausado: false });
+    }
+  });
+
+  modalPausa.addEventListener('click', (ev) => {
+    const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-pausa]');
+    if (!btn) return;
+    const accion = btn.dataset.pausa;
+    if (accion === 'continuar') {
+      modalPausa.close();
+    } else if (accion === 'fuentes') {
+      fuentes?.abrir(btn);
+    } else if (accion === 'abandonar') {
+      confirmandoAbandono = true;
+      pintarModalPausa();
+    } else if (accion === 'confirmar-no') {
+      confirmandoAbandono = false;
+      pintarModalPausa();
+    } else if (accion === 'confirmar-si') {
+      estabaPausadoAntesModal = false;
+      modalPausa.close();
+      abandonarPartida();
+    }
+  });
+
+  menuLateral.addEventListener('click', (ev) => {
+    const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-panel]');
+    if (!btn) return;
+    const id = btn.dataset.panel as PanelLateralId;
+    abrirPanelLateral(id);
+  });
+
+  panelLateral.addEventListener('click', (ev) => {
+    const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-cerrar-panel]');
+    if (btn) cerrarPanelLateral(true);
+  });
+
+  backdropPanel.addEventListener('click', () => cerrarPanelLateral(true));
+
+  window.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && panelActivo && !modalPausa.open && !fuentes?.estaAbierto()) {
+      cerrarPanelLateral(true);
+    }
+  });
+
   const pintar = (e: GameState) => {
+    if (e.fase === 'aviso' || e.fase === 'reporte') {
+      hud.hidden = true;
+      dialogo.hidden = true;
+      if (panelActivo) cerrarPanelLateral(false);
+      if (modalPausa.open) modalPausa.close();
+      return;
+    }
+
+    hud.hidden = false;
+    btnPausa.innerHTML = `<span class="hud-pausa-btn__icono" aria-hidden="true">${ICONO_PAUSA}</span><span>${t('pausa.abrir')}</span>`;
+    btnPausa.setAttribute('aria-label', t('pausa.abrir'));
+
     const pctEn = Math.round((e.recursos.energia / balance.energiaPorSol) * 100);
     const pctSV = Math.round(e.recursos.soporteVital);
     const pctBl = Math.round(e.recursos.blindaje);
 
-    hud.innerHTML = `
+    hudEstado.innerHTML = `
       <div class="hud-centro">
         <div class="hud-dia">
           <span class="hud-dia__estrella" aria-hidden="true">✦</span>
@@ -174,8 +484,11 @@ export function montarHud(raiz: HTMLElement) {
       <div class="hud-derecha-arriba">
         ${avisoTormenta(e)}
       </div>
-      ${menuLateralEstatico()}
     `;
+
+    pintarMenuLateral();
+    if (panelActivo) pintarPanelLateral(e);
+    if (modalPausa.open) pintarModalPausa();
 
     const botEnLugarDelComandante =
       e.peticionActiva &&
