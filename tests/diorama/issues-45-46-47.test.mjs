@@ -79,6 +79,10 @@ test('Issues #47 y #45: flujo completo de reinicio y registro de eventos', async
   assert.ok(app.store.getState().peticionActiva !== null);
   app.store.dispatch({ type: 'RESOLVER_PETICION', aceptada: true });
   assert.equal(app.store.getState().peticionActiva, null);
+  assert.equal(log.at(-1).clave, 'panelLateral.registro.peticionPendiente');
+  const tarea = app.store.getState().tareaPendiente;
+  app.store.dispatch({ type: 'MOVER_TRIPULANTE', quien: 'comandante', modulo: tarea.modulo });
+  app.store.dispatch({ type: 'ASIGNAR_ENERGIA', modulo: tarea.modulo, unidades: tarea.energiaObjetivo });
   assert.equal(log.at(-1).clave, 'panelLateral.registro.peticionAceptada');
 
   // 4. Avanzar horas y pausar antes de abandonar

@@ -1,6 +1,6 @@
 // Frente 3 · Panel de energía al entrar a un módulo (#12).
 // Se muestra cuando el comandante entra a cualquier módulo distinto del pasillo central.
-import { getIdioma, t } from '../i18n';
+import { t } from '../i18n';
 import { store } from '../state/store';
 import type { GameState, ModuleId } from '../state/types';
 
@@ -22,7 +22,7 @@ export function montarPanelModulo(raiz: HTMLElement) {
 
   let avisoSinEnergiaForzado = false;
   let ultimoModulo: ModuleId = store.getState().tripulacion.comandante.modulo;
-  let ultimaClaveRender = '';
+  let contenidoAnterior = '';
 
   const pintar = (e: GameState) => {
     const modulo = e.tripulacion.comandante.modulo;
@@ -33,9 +33,8 @@ export function montarPanelModulo(raiz: HTMLElement) {
     }
 
     // El pasillo central no tiene panel; tampoco se muestra en la portada ni en el reporte final.
-    if (modulo === 'pasillo' || e.fase === 'reporte' || e.fase === 'aviso') {
+    if ((modulo === 'pasillo' && !e.tareaPendiente) || e.fase === 'reporte' || e.fase === 'aviso') {
       panel.hidden = true;
-      ultimaClaveRender = '';
       return;
     }
 
@@ -43,11 +42,15 @@ export function montarPanelModulo(raiz: HTMLElement) {
     const actual = e.energiaAsignada[modulo] ?? 0;
     const libre = e.recursos.energia;
     const sinEnergia = libre <= 0;
-    const claveRender = `${getIdioma()}:${modulo}:${actual}:${libre}:${avisoSinEnergiaForzado ? 1 : 0}`;
-    if (claveRender === ultimaClaveRender) return;
-    ultimaClaveRender = claveRender;
+    const tarea = e.tareaPendiente;
+    const pendiente = tarea ? `<div class="panel-modulo__tarea" role="status">
+      <strong>${t('tarea.titulo')}</strong>
+      <p>${t('tarea.instruccion', { modulo: t(`modulo.${tarea.modulo}`), unidades: Math.max(0, tarea.energiaObjetivo - (e.energiaAsignada[tarea.modulo] ?? 0)) })}</p>
+      ${sinEnergia ? `<p>${t('tarea.sinEnergia')}</p>` : ''}
+      <button type="button" data-accion="cancelar">${t('tarea.cancelar')}</button>
+    </div>` : '';
 
-    panel.innerHTML = `
+    const contenido = `${pendiente}${modulo === 'pasillo' ? '' : `
       <div class="panel-modulo__cabecera">
         <div class="panel-modulo__icono" aria-hidden="true">${ICONOS_MODULO[modulo]}</div>
         <div class="panel-modulo__titulos">
@@ -92,7 +95,11 @@ export function montarPanelModulo(raiz: HTMLElement) {
           ? `<div class="panel-modulo__alerta" role="status">${t('panelModulo.sinEnergia')}</div>`
           : ''
       }
-    `;
+    `}`;
+    if (contenido !== contenidoAnterior) {
+      panel.innerHTML = contenido;
+      contenidoAnterior = contenido;
+    }
   };
 
   panel.addEventListener('click', (ev) => {
@@ -101,6 +108,10 @@ export function montarPanelModulo(raiz: HTMLElement) {
 
     const e = store.getState();
     const modulo = e.tripulacion.comandante.modulo;
+    if (btn.dataset.accion === 'cancelar') {
+      store.dispatch({ type: 'CANCELAR_TAREA' });
+      return;
+    }
     if (modulo === 'pasillo') return;
 
     const actual = e.energiaAsignada[modulo] ?? 0;

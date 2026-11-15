@@ -1,11 +1,13 @@
-// Pantalla final: resultado de un vistazo (estrellas), radiación de cada
-// tripulante con barras y contadores animados, comparación que un niño entienda
-// (días normales en Marte), la curva real de Curiosity y consejos según lo que hizo.
+// Final de la partida en tres pasos: puntuación → animación "¿Qué pasó en realidad?"
+// (historia.ts) → pantalla de fin.
+// La puntuación muestra estrellas, la radiación de cada tripulante con barras y
+// contadores animados, la comparación en días normales en Marte y consejos.
 import curiosityDatos from '../data/curiosity_mayo2024.json';
 import eventos from '../data/events.json';
 import { getIdioma, t } from '../i18n';
-import { abandonarPartida } from '../state/partida';
+import { abandonarPartida, iniciarPartida } from '../state/partida';
 import { analizarPartida, DOSIS_DIA_NORMAL, type Resultado } from '../state/resultado';
+import { mostrarHistoria } from './historia';
 import { store } from '../state/store';
 import type { GameState } from '../state/types';
 import './reporte.css';
@@ -92,68 +94,6 @@ function barra(etiqueta: string, dosis: number, maximo: number, detalle: string,
   return fila;
 }
 
-function graficaCuriosity(): HTMLElement {
-  const figura = document.createElement('figure');
-  figura.className = 'reporte-grafica';
-  const leyenda = document.createElement('figcaption');
-  leyenda.textContent = t('reporte.graficaTitulo');
-  figura.append(leyenda);
-  const ns = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(ns, 'svg');
-  svg.setAttribute('viewBox', '0 0 640 210');
-  svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', t('reporte.graficaAccesible'));
-  const datos = curiosityDatos.curvaHoraria;
-  const maximo = Math.max(...datos.map((p) => p.tasaMicrograyPorHora ?? 0), 1);
-  const limite = Math.ceil(maximo / 50) * 50;
-  const y = (valor: number) => 165 - valor / limite * 140;
-  for (let tick = 0; tick <= limite; tick += 50) {
-    const linea = document.createElementNS(ns, 'line');
-    linea.setAttribute('x1', '50'); linea.setAttribute('x2', '625');
-    linea.setAttribute('y1', String(y(tick))); linea.setAttribute('y2', String(y(tick)));
-    linea.setAttribute('class', 'reporte-grafica-rejilla'); svg.append(linea);
-    const etiqueta = document.createElementNS(ns, 'text');
-    etiqueta.setAttribute('x', '44'); etiqueta.setAttribute('y', String(y(tick) + 4));
-    etiqueta.setAttribute('text-anchor', 'end'); etiqueta.textContent = numero(tick); svg.append(etiqueta);
-  }
-  let segmento: string[] = [];
-  function cerrarSegmento() {
-    if (!segmento.length) return;
-    const trazo = document.createElementNS(ns, 'polyline');
-    trazo.setAttribute('points', segmento.join(' '));
-    trazo.setAttribute('class', 'reporte-grafica-linea');
-    // pathLength = 1 permite animar el trazo dibujándose, sin medir su longitud.
-    trazo.setAttribute('pathLength', '1');
-    svg.append(trazo); segmento = [];
-  }
-  datos.forEach((p, indice) => {
-    if (p.tasaMicrograyPorHora === null) { cerrarSegmento(); return; }
-    segmento.push(`${50 + indice / (datos.length - 1) * 575},${y(p.tasaMicrograyPorHora)}`);
-  });
-  cerrarSegmento();
-  [19, 20, 21, 22].forEach((dia, indice) => {
-    const etiqueta = document.createElementNS(ns, 'text');
-    etiqueta.setAttribute('x', String(50 + indice * 24 / (datos.length - 1) * 575));
-    etiqueta.setAttribute('y', '187'); etiqueta.setAttribute('text-anchor', 'middle');
-    etiqueta.textContent = `${dia}/05`; svg.append(etiqueta);
-  });
-  figura.append(svg, texto('p', t('reporte.graficaNota')));
-  return figura;
-}
-
-function lineaPronostico(estado: GameState): HTMLElement {
-  const evento = eventos.eventos.find((item) => item.id === estado.eventoId);
-  if (!evento || evento.esEjemplo !== false || !Number.isFinite(evento.horasPronosticadas) || !Number.isFinite(evento.horasReales)) {
-    return texto('p', t('reporte.pronosticoNoDisponible'));
-  }
-  const diferencia = evento.horasReales - evento.horasPronosticadas;
-  const horas = numero(Math.abs(diferencia), 1);
-  const clave = Math.abs(diferencia) < 1
-    ? 'reporte.pronosticoExacto'
-    : diferencia < 0 ? 'reporte.pronosticoAntes' : 'reporte.pronosticoDespues';
-  return texto('p', t(clave, { horas, fecha: evento.fecha }), 'reporte-pronostico');
-}
-
 export function montarReporte(raiz: HTMLElement): () => void {
   const pantalla = document.createElement('section');
   pantalla.className = 'reporte';
@@ -206,31 +146,21 @@ export function montarReporte(raiz: HTMLElement): () => void {
     }
     panel.append(barras, texto('p', t('reporte.explicaDias', { dia: numero(DOSIS_DIA_NORMAL) }), 'reporte-explica'));
 
-    // 3. Lo que pasó de verdad
-    panel.append(texto('h2', t('reporte.deVerdad')), lineaPronostico(estado), texto('p', t('reporte.curiosity')), graficaCuriosity());
-
-    // 4. Consejos según lo que hizo
+    // 3. Consejos según lo que hizo
     panel.append(texto('h2', t('reporte.proximaVez')));
     const consejos = document.createElement('ul');
     consejos.className = 'reporte-consejos';
     for (const c of resultado.consejos) consejos.append(texto('li', t(c.clave, c.vars)));
     panel.append(consejos);
 
-    // 5. Fuentes y volver a jugar
-    const fuentes = document.createElement('p');
-    fuentes.className = 'reporte-fuentes';
-    fuentes.append(document.createTextNode(t('reporte.fuentes') + ' '));
-    const curiosity = enlace(FUENTE_CURIOSITY, t('reporte.fuenteCuriosity'));
-    if (curiosity) fuentes.append(curiosity);
-    const evento = eventos.eventos.find((item) => item.id === estado.eventoId);
-    const fuenteEvento = evento && evento.esEjemplo === false ? enlace(evento.fuente, t('reporte.fuentePronostico')) : null;
-    if (fuenteEvento) fuentes.append(document.createTextNode(' · '), fuenteEvento);
-    panel.append(fuentes);
-
+    // 4. Siguiente paso: la animación de lo que pasó en realidad
     const boton = document.createElement('button');
     boton.type = 'button';
-    boton.textContent = t('reporte.repetir');
-    boton.addEventListener('click', () => abandonarPartida());
+    boton.className = 'reporte-ver-historia';
+    boton.textContent = t('reporte.verHistoria');
+    boton.addEventListener('click', () => {
+      mostrarHistoria(pantalla, estado, resultado, { alTerminar: () => mostrarFin(estado, resultado) });
+    });
     panel.append(boton);
     pantalla.append(panel);
     pantalla.scrollTop = 0;
@@ -242,6 +172,47 @@ export function montarReporte(raiz: HTMLElement): () => void {
 
     titulo.tabIndex = -1;
     titulo.focus();
+  }
+
+  function mostrarFin(estado: GameState, resultado: Resultado) {
+    pantalla.replaceChildren();
+    const panel = document.createElement('div');
+    panel.className = 'reporte-panel historia-fin';
+    const titulo = texto('h1', t('fin.titulo'), 'historia-fin__titulo');
+    titulo.id = 'reporte-titulo';
+    panel.append(titulo, texto('p', t(resultado.estrellas === 3 ? 'fin.texto3' : 'fin.texto'), 'historia-fin__texto'));
+
+    const acciones = document.createElement('div');
+    acciones.className = 'historia-fin__acciones';
+    const boton = (clave: string, clase: string, accion: () => void) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = clase;
+      b.textContent = t(clave);
+      b.addEventListener('click', accion);
+      acciones.append(b);
+      return b;
+    };
+    const jugar = boton('reporte.repetir', 'reporte-ver-historia', () => { abandonarPartida(); iniciarPartida(); });
+    boton('fin.verOtraVez', 'historia-fin__secundario', () => {
+      mostrarHistoria(pantalla, estado, resultado, { alTerminar: () => mostrarFin(estado, resultado) });
+    });
+    boton('fin.menu', 'historia-fin__secundario', () => abandonarPartida());
+    panel.append(acciones);
+
+    const fuentes = document.createElement('p');
+    fuentes.className = 'historia-fin__fuentes';
+    fuentes.append(document.createTextNode(t('reporte.fuentes') + ' '));
+    const curiosity = enlace(FUENTE_CURIOSITY, t('reporte.fuenteCuriosity'));
+    if (curiosity) fuentes.append(curiosity);
+    const evento = eventos.eventos.find((item) => item.id === estado.eventoId);
+    const fuenteEvento = evento && evento.esEjemplo === false ? enlace(evento.fuente, t('reporte.fuentePronostico')) : null;
+    if (fuenteEvento) fuentes.append(document.createTextNode(' · '), fuenteEvento);
+    panel.append(fuentes);
+
+    pantalla.append(panel);
+    pantalla.scrollTop = 0;
+    jugar.focus();
   }
 
   const desuscribir = store.subscribe(pintar);

@@ -35,7 +35,7 @@ function CamaraIsometrica() {
 
   useEffect(() => {
     const calculado = Math.min(
-      Math.max(Math.min(tamano.width / 38, tamano.height / 25), ZOOM_MIN),
+      Math.max(Math.min(tamano.width / 30.4, tamano.height / 20), ZOOM_MIN),
       ZOOM_MAX,
     );
     camara.zoom = calculado;

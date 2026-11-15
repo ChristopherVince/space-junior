@@ -64,7 +64,7 @@ test('las peticiones no repiten frase, respetan la espera y el tope por partida'
   }
 });
 
-test('cada petición lleva a un módulo que sí tiene efecto y aceptarla le da energía', async () => {
+test('aceptar una petición requiere ir al módulo y asignar energía', async () => {
   const app = await cargar();
   const { peticiones } = jugar(app, { horasReales: 45, reparto: {}, acepta: false, alRefugio: true });
   assert.ok(peticiones.length > 0, 'con todo sin energía debe haber al menos una petición');
@@ -77,7 +77,35 @@ test('cada petición lleva a un módulo que sí tiene efecto y aceptarla le da e
   const p = app.store.getState().peticionActiva;
   assert.equal(p?.modulo, 'invernadero');
   app.store.dispatch({ type: 'RESOLVER_PETICION', aceptada: true });
+  assert.equal(app.store.getState().energiaAsignada.invernadero ?? 0, 0);
+  assert.equal(app.store.getState().tareaPendiente.modulo, 'invernadero');
+  app.store.dispatch({ type: 'ASIGNAR_ENERGIA', modulo: 'invernadero', unidades: 1 });
+  assert.equal(app.store.getState().energiaAsignada.invernadero ?? 0, 0);
+  app.store.dispatch({ type: 'MOVER_TRIPULANTE', quien: 'comandante', modulo: 'invernadero' });
+  app.store.dispatch({ type: 'ASIGNAR_ENERGIA', modulo: 'invernadero', unidades: 1 });
   assert.equal(app.store.getState().energiaAsignada.invernadero, 1);
+  assert.equal(app.store.getState().tareaPendiente, null);
+});
+
+test('la tarea admite dos unidades, puede cancelarse y se interrumpe al refugiarse', async () => {
+  const app = await cargar();
+  app.store.dispatch({ type: 'INICIAR_PARTIDA', eventoId: 'prueba', pronostico: { horasPronosticadas: 45, margenHoras: 7, horasReales: 45 } });
+  const pedir = () => app.store.dispatch({ type: 'MOSTRAR_PETICION', de: 'cientifico', textoId: 'prueba', modulo: 'comunicaciones' });
+  pedir();
+  app.store.dispatch({ type: 'RESOLVER_PETICION', aceptada: true, unidades: 2 });
+  app.store.dispatch({ type: 'MOVER_TRIPULANTE', quien: 'comandante', modulo: 'comunicaciones' });
+  app.store.dispatch({ type: 'ASIGNAR_ENERGIA', modulo: 'comunicaciones', unidades: 1 });
+  assert.ok(app.store.getState().tareaPendiente);
+  app.store.dispatch({ type: 'ASIGNAR_ENERGIA', modulo: 'comunicaciones', unidades: 2 });
+  assert.equal(app.store.getState().tareaPendiente, null);
+  pedir();
+  app.store.dispatch({ type: 'RESOLVER_PETICION', aceptada: true });
+  app.store.dispatch({ type: 'CANCELAR_TAREA' });
+  assert.equal(app.store.getState().tareaPendiente, null);
+  pedir();
+  app.store.dispatch({ type: 'RESOLVER_PETICION', aceptada: true });
+  app.store.dispatch({ type: 'IR_AL_REFUGIO' });
+  assert.equal(app.store.getState().tareaPendiente, null);
 });
 
 test('con un reparto equilibrado la tripulación casi no interrumpe', async () => {
@@ -130,8 +158,8 @@ test('el resultado final da estrellas y consejos según lo que hizo el jugador',
 test('todos los textos nuevos existen en español e inglés', () => {
   const es = JSON.parse(fs.readFileSync('src/i18n/es.json', 'utf8'));
   const en = JSON.parse(fs.readFileSync('src/i18n/en.json', 'utf8'));
-  const fuentes = ['src/bots/bots.ts', 'src/state/resultado.ts', 'src/ui/reporte.ts'].map((f) => fs.readFileSync(f, 'utf8')).join('\n');
-  const claves = new Set([...fuentes.matchAll(/'((?:bot|reporte)\.[a-zA-Z0-9.]+)'/g)].map((m) => m[1]));
+  const fuentes = ['src/bots/bots.ts', 'src/state/resultado.ts', 'src/ui/reporte.ts', 'src/ui/historia.ts'].map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+  const claves = new Set([...fuentes.matchAll(/'((?:bot|reporte|historia|fin)\.[a-zA-Z0-9.]+)'/g)].map((m) => m[1]));
   for (const n of [1, 2, 3]) claves.add(`reporte.resultado.${n}`);
   for (const clave of claves) {
     if (clave.endsWith('.')) continue;

@@ -30,6 +30,7 @@ export function estadoInicial(): GameState {
       cientifico: { id: 'cientifico', modulo: 'invernadero', dosis: 0 },
     },
     peticionActiva: null,
+    tareaPendiente: null,
     pausado: false,
     horaInicioTormenta: null,
     motivoFin: null,
@@ -93,6 +94,7 @@ function unaHora(e: GameState): GameState {
   };
 
   siguiente = actualizarTormenta(siguiente);
+  if (siguiente.fase !== 'preparacion') siguiente = { ...siguiente, tareaPendiente: null, peticionActiva: null };
 
   if (siguiente.fase !== 'reporte' && siguiente.recursos.soporteVital <= 0) {
     siguiente = { ...siguiente, fase: 'reporte', motivoFin: 'sinSoporteVital' };
@@ -142,9 +144,19 @@ export function reducer(estado: GameState, accion: Action): GameState {
       return e;
     }
 
-    case 'ASIGNAR_ENERGIA':
+    case 'ASIGNAR_ENERGIA': {
       if (estado.fase === 'reporte') return estado;
-      return asignar(estado, accion.modulo, accion.unidades);
+      if (estado.tareaPendiente?.modulo === accion.modulo &&
+          estado.tripulacion.comandante.modulo !== accion.modulo &&
+          accion.unidades > energiaEn(estado, accion.modulo)) return estado;
+      const siguiente = asignar(estado, accion.modulo, accion.unidades);
+      if (siguiente.tareaPendiente?.modulo === accion.modulo &&
+          estado.tripulacion.comandante.modulo === accion.modulo &&
+          energiaEn(siguiente, accion.modulo) >= siguiente.tareaPendiente.energiaObjetivo) {
+        return { ...siguiente, tareaPendiente: null };
+      }
+      return siguiente;
+    }
 
     case 'MOVER_TRIPULANTE':
       return {
@@ -165,31 +177,24 @@ export function reducer(estado: GameState, accion: Action): GameState {
 
     case 'RESOLVER_PETICION': {
       const peticion = estado.peticionActiva;
-      let e: GameState = { ...estado, peticionActiva: null };
-      if (!peticion || !accion.aceptada || peticion.de === 'comandante') return e;
-
-      // Aceptar = dar 1 unidad al módulo del bot. Si no queda energía libre,
-      // se quita al módulo con más energía (siempre se descuida otra cosa).
+      const e: GameState = { ...estado, peticionActiva: null };
+      if (!peticion || !accion.aceptada || peticion.de === 'comandante' || estado.fase !== 'preparacion') return e;
       const destino = peticion.modulo ?? MODULO_DE[peticion.de];
-      if (e.recursos.energia === 0) {
-        const donante = (Object.keys(e.energiaAsignada) as ModuleId[])
-          .filter((m) => m !== destino && energiaEn(e, m) > 0)
-          .sort((a, b) => energiaEn(e, b) - energiaEn(e, a))[0];
-        if (!donante) return e;
-        e = asignar(e, donante, energiaEn(e, donante) - 1);
-      }
-      return asignar(e, destino, energiaEn(e, destino) + 1);
+      return { ...e, tareaPendiente: { de: peticion.de, modulo: destino, energiaObjetivo: energiaEn(e, destino) + (accion.unidades ?? 1) } };
     }
+
+    case 'CANCELAR_TAREA':
+      return estado.tareaPendiente ? { ...estado, tareaPendiente: null } : estado;
 
     case 'IR_AL_REFUGIO':
       if (estado.fase !== 'preparacion') return estado;
-      return { ...estado, fase: 'refugio' };
+      return { ...estado, fase: 'refugio', tareaPendiente: null, peticionActiva: null };
 
     case 'PAUSAR':
       return { ...estado, pausado: accion.pausado };
 
     case 'TERMINAR_PARTIDA':
-      return { ...estado, fase: 'reporte', motivoFin: accion.motivo };
+      return { ...estado, fase: 'reporte', motivoFin: accion.motivo, tareaPendiente: null, peticionActiva: null };
 
     case 'ABANDONAR_PARTIDA':
       return estadoInicial();
