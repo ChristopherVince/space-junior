@@ -54,8 +54,8 @@ export const REGLAS: ReglaBot[] = [
   {
     quien: 'medico',
     enRiesgo: (e) =>
-      ((e.energiaAsignada.enfermeria ?? 0) < 2 && e.tripulacion.comandante.dosis >= 80) ||
-      e.tripulacion.comandante.dosis > 350,
+      ((e.energiaAsignada.enfermeria ?? 0) < 2 && e.tripulacion.comandante.dosis >= 20) ||
+      e.tripulacion.comandante.dosis > 120,
     textoId: 'bot.medico.dosis',
     textos: ['bot.medico.dosis', 'bot.medico.2', 'bot.medico.3'],
   },
