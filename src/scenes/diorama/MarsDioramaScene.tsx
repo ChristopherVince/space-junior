@@ -141,6 +141,8 @@ export function MarsDioramaScene() {
 
   useEffect(() => {
     const alPresionar = (e: KeyboardEvent) => {
+      const actual = store.getState();
+      if (actual.pausado || actual.fase === 'aviso' || actual.fase === 'reporte') return;
       if (e.key === '1' || e.key === '2' || e.key === '3') {
         setVista(e.key);
       }

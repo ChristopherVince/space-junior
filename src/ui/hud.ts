@@ -287,8 +287,11 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
   let estabaPausadoAntesPanel = false;
   let estabaPausadoAntesModal = false;
   let confirmandoAbandono = false;
+  let ultimoIdiomaHud = '';
+  let ultimoPanelPintado: PanelLateralId | null | undefined = undefined;
 
   const pintarMenuLateral = () => {
+    ultimoPanelPintado = panelActivo;
     const botones: { id: PanelLateralId; icono: string; clave: string }[] = [
       { id: 'modulos', icono: ICONO_CAPAS, clave: 'hud.menu.modulos' },
       { id: 'tareas', icono: ICONO_TAREAS, clave: 'hud.menu.tareas' },
@@ -462,8 +465,12 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
     }
 
     hud.hidden = false;
-    btnPausa.innerHTML = `<span class="hud-pausa-btn__icono" aria-hidden="true">${ICONO_PAUSA}</span><span>${t('pausa.abrir')}</span>`;
-    btnPausa.setAttribute('aria-label', t('pausa.abrir'));
+    const idiomaActual = getIdioma();
+    const idiomaCambio = idiomaActual !== ultimoIdiomaHud;
+    if (idiomaCambio) {
+      btnPausa.innerHTML = `<span class="hud-pausa-btn__icono" aria-hidden="true">${ICONO_PAUSA}</span><span>${t('pausa.abrir')}</span>`;
+      btnPausa.setAttribute('aria-label', t('pausa.abrir'));
+    }
 
     const pctEn = Math.round((e.recursos.energia / balance.energiaPorSol) * 100);
     const pctSV = Math.round(e.recursos.soporteVital);
@@ -486,9 +493,12 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
       </div>
     `;
 
-    pintarMenuLateral();
+    if (idiomaCambio || panelActivo !== ultimoPanelPintado) {
+      pintarMenuLateral();
+    }
     if (panelActivo) pintarPanelLateral(e);
-    if (modalPausa.open) pintarModalPausa();
+    if (modalPausa.open && idiomaCambio) pintarModalPausa();
+    ultimoIdiomaHud = idiomaActual;
 
     const botEnLugarDelComandante =
       e.peticionActiva &&

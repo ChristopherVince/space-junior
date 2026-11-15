@@ -1039,6 +1039,9 @@ body {
     padding: 7px 12px;
     font-size: 12px;
   }
+  .hud-menu-lateral {
+    left: 98px;
+  }
   .hud-panel-lateral {
     top: 50%;
     left: 12px;
