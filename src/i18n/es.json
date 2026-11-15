@@ -185,5 +185,13 @@
   "reporte.consejo.mejorar": "Prueba a cargar el blindaje un poco antes: el pronóstico puede equivocarse por muchas horas.",
   "glosario.queSignifica": "¿Qué significa?",
   "glosario.entendido": "¡Entendido!",
-  "glosario.tocaParaVer": "Toca para ver qué significa"
+  "glosario.tocaParaVer": "Toca para ver qué significa",
+  "contexto.insignia": "Tu misión en Marte",
+  "contexto.titulo": "¡Hola, Comandante!",
+  "contexto.intro": "Vives en una base en Marte junto a 3 compañeros astronautas. Tu trabajo como capitán es cuidarlos antes de que llegue una tormenta solar.",
+  "contexto.objetivoTitulo": "¿Cuál es tu objetivo?",
+  "contexto.punto1": "Camina por la base y entra a los módulos para activarlos.",
+  "contexto.punto2": "Reparte tus 10 rayos de energía entre oxígeno, escudo y salud.",
+  "contexto.punto3": "Cuando se acerque la tormenta, ¡corre con tu equipo al Refugio!",
+  "contexto.boton": "¡Entendido, a jugar!"
 }

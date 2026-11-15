@@ -166,13 +166,104 @@ function svgAstronautaPortada(): string {
   `;
 }
 
+function svgRetratoMini(colorTraje: string, simbolo: string): string {
+  return `
+    <svg viewBox="0 0 48 48" width="38" height="38" aria-hidden="true">
+      <circle cx="24" cy="24" r="22" fill="#fff5eb" stroke="${colorTraje}" stroke-width="2.2" />
+      <rect x="13" y="29" width="22" height="13" rx="6.5" fill="#ffffff" stroke="#d5c7b8" stroke-width="1.3" />
+      <rect x="17" y="31.5" width="14" height="7.5" rx="2.5" fill="${colorTraje}" />
+      <circle cx="24" cy="19" r="11" fill="#ffffff" stroke="#d5c7b8" stroke-width="1.3" />
+      <rect x="15.5" y="13" width="17" height="11" rx="5.5" fill="#132644" />
+      <ellipse cx="19.5" cy="16" rx="2.5" ry="1.3" fill="#ffffff" opacity="0.65" />
+      <circle cx="21" cy="19" r="1.2" fill="#ffffff" />
+      <circle cx="27" cy="19" r="1.2" fill="#ffffff" />
+      <text x="24" y="37.5" text-anchor="middle" font-size="7" font-weight="900" fill="#ffffff">${simbolo}</text>
+    </svg>
+  `;
+}
+
 export function montarInicio(raiz: HTMLElement, fuentes?: ControlFuentes) {
   const pantalla = document.createElement('div');
   pantalla.className = 'inicio';
   raiz.append(pantalla);
 
+  const modalContexto = document.createElement('div');
+  modalContexto.className = 'contexto-mision';
+  modalContexto.hidden = true;
+  raiz.append(modalContexto);
+
   let mostrarAyuda = false;
+  let timerPausaContexto: number | null = null;
   let ultimaFase = store.getState().fase;
+
+  const pintarContexto = () => {
+    modalContexto.innerHTML = `
+      <div class="contexto-mision__tarjeta" role="dialog" aria-modal="true" aria-labelledby="contexto-titulo">
+        <div class="contexto-mision__cabecera">
+          <div class="contexto-mision__avatar">
+            ${svgRetratoMini('#355b99', '★')}
+          </div>
+          <div>
+            <span class="contexto-mision__insignia">🪐 ${t('contexto.insignia')}</span>
+            <h2 id="contexto-titulo" class="contexto-mision__titulo">${t('contexto.titulo')}</h2>
+          </div>
+        </div>
+
+        <p class="contexto-mision__intro">${t('contexto.intro')}</p>
+
+        <div class="contexto-mision__tripulacion" aria-label="${t('inicio.tripulacionTitulo')}">
+          <div class="contexto-mision__chip">
+            ${svgRetratoMini('#d97706', '⚡')}
+            <div>
+              <strong>${t('inicio.tripulante.ingeniero')}</strong>
+              <span>${t('inicio.tripulante.ingenieroRol')}</span>
+            </div>
+          </div>
+          <div class="contexto-mision__chip">
+            ${svgRetratoMini('#16a34a', '🌱')}
+            <div>
+              <strong>${t('inicio.tripulante.cientifico')}</strong>
+              <span>${t('inicio.tripulante.cientificoRol')}</span>
+            </div>
+          </div>
+          <div class="contexto-mision__chip">
+            ${svgRetratoMini('#dc2626', '➕')}
+            <div>
+              <strong>${t('inicio.tripulante.medico')}</strong>
+              <span>${t('inicio.tripulante.medicoRol')}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="contexto-mision__objetivos">
+          <h3 class="contexto-mision__subtitulo">${t('contexto.objetivoTitulo')}</h3>
+          <ul class="contexto-mision__lista">
+            <li><span class="contexto-mision__icono" aria-hidden="true">🧭</span><span>${t('contexto.punto1')}</span></li>
+            <li><span class="contexto-mision__icono" aria-hidden="true">⚡</span><span>${t('contexto.punto2')}</span></li>
+            <li><span class="contexto-mision__icono" aria-hidden="true">🛡️</span><span>${t('contexto.punto3')}</span></li>
+          </ul>
+        </div>
+
+        <button type="button" class="inicio__pill inicio__pill--jugar contexto-mision__boton" data-accion="cerrar-contexto">
+          <span class="inicio__pill-icono" aria-hidden="true">▶</span>
+          <span>${t('contexto.boton')}</span>
+        </button>
+      </div>
+    `;
+  };
+
+  const cerrarContexto = () => {
+    if (timerPausaContexto !== null) {
+      window.clearTimeout(timerPausaContexto);
+      timerPausaContexto = null;
+    }
+    if (!modalContexto.hidden) {
+      modalContexto.hidden = true;
+      if (store.getState().pausado) {
+        store.dispatch({ type: 'PAUSAR', pausado: false });
+      }
+    }
+  };
 
   const pintar = () => {
     const idioma = getIdioma();
@@ -266,12 +357,36 @@ export function montarInicio(raiz: HTMLElement, fuentes?: ControlFuentes) {
     if (boton.dataset.accion === 'jugar') {
       pantalla.hidden = true;
       iniciarPartida();
+      pintarContexto();
+      modalContexto.hidden = false;
+      if (timerPausaContexto !== null) window.clearTimeout(timerPausaContexto);
+      timerPausaContexto = window.setTimeout(() => {
+        timerPausaContexto = null;
+        const faseActual = store.getState().fase;
+        if (!modalContexto.hidden && faseActual !== 'aviso' && faseActual !== 'reporte') {
+          store.dispatch({ type: 'PAUSAR', pausado: true });
+        }
+      }, 120);
+    }
+  });
+
+  modalContexto.addEventListener('click', (ev) => {
+    const boton = (ev.target as HTMLElement).closest('button[data-accion="cerrar-contexto"]');
+    if (boton || ev.target === modalContexto) {
+      cerrarContexto();
     }
   });
 
   store.subscribe((estado) => {
     const visible = estado.fase === 'aviso';
     pantalla.hidden = !visible;
+    if (visible || estado.fase === 'reporte') {
+      if (timerPausaContexto !== null) {
+        window.clearTimeout(timerPausaContexto);
+        timerPausaContexto = null;
+      }
+      modalContexto.hidden = true;
+    }
     if (visible && ultimaFase !== 'aviso') {
       mostrarAyuda = false;
       pintar();
