@@ -6,60 +6,59 @@ export interface PuntoRuta {
   z: number;
 }
 
-type NodoBase =
+type NodoId =
   | 'refugio'
   | 'puertaRefugio'
   | 'aproximacionRefugio'
   | 'invernaderoPasillo'
   | 'invernaderoOesteNorte'
   | 'invernaderoNorte'
-  | 'pasilloNorte'
+  | 'invernaderoEsteNorte'
+  | 'invernaderoEsteCentro'
+  | 'invernaderoEsteSur'
   | 'pasilloCentro'
+  | 'pasilloEste'
   | 'comunicaciones'
   | 'comunicacionesEnergia'
   | 'puertaEnergia'
   | 'energia'
   | 'comunicacionesEnfermeria'
   | 'puertaEnfermeria'
-  | 'enfermeria';
-type NodoId = NodoBase | 'habitacionNorte' | 'habitacionSur' | 'habitacionExtremoSur' | 'oesteNorte' | 'oesteSur' | 'oesteExtremoSur' | 'surCentral' | 'surPasillo' | 'wcNorte' | 'wcSur' | 'puertaWcNorte' | 'puertaWcSur' | 'gimnasio' | 'puertaGimnasio' | 'antesGimnasio' | 'banoEste' | 'puertaBano' | 'antesBano' | 'pasoBano' | 'banoCentral';
+  | 'enfermeria'
+  | 'habitacionNorte'
+  | 'habitacionSur'
+  | 'habitacionExtremoSur'
+  | 'oesteNorte'
+  | 'oesteSur'
+  | 'oesteExtremoSur'
+  | 'surCentral';
 
-const NODOS: Record<NodoId, PuntoRuta> = {
-  habitacionNorte: { x: -8, z: -3.65 },
-  habitacionSur: { x: -8, z: 1.25 },
-  habitacionExtremoSur: { x: -8, z: 3.65 },
-  oesteNorte: { x: -5.5, z: -3.65 },
+export const NODOS: Record<NodoId, PuntoRuta> = {
+  habitacionNorte: { x: -7.6, z: -3.65 },
+  habitacionSur: { x: -7.6, z: 1.25 },
+  habitacionExtremoSur: { x: -7.6, z: 3.65 },
+  oesteNorte: { x: -5.5, z: -3.35 },
   oesteSur: { x: -5.5, z: 1.25 },
-  oesteExtremoSur: { x: -5.5, z: 3.65 },
-  surCentral: { x: -3.6, z: 3.3 },
-  surPasillo: { x: 0.1, z: 3.3 },
-  wcNorte: { x: -4.35, z: -0.39 },
-  wcSur: { x: -4.35, z: 0.39 },
-  puertaWcNorte: { x: -5.5, z: -0.39 },
-  puertaWcSur: { x: -5.5, z: 0.39 },
-  gimnasio: { x: 4.2, z: -3.3 },
-  puertaGimnasio: { x: 4.2, z: -2.05 },
-  antesGimnasio: { x: 4.2, z: -1.1 },
-  banoEste: { x: 7.75, z: -3.3 },
-  puertaBano: { x: 7.75, z: -2.05 },
-  antesBano: { x: 7.75, z: -1.1 },
-  pasoBano: { x: 6.6, z: -1.95 },
-  banoCentral: { x: 6.6, z: -3.3 },
-  refugio: { x: -7.8, z: -1.25 },
+  oesteExtremoSur: { x: -5.5, z: 2.95 },
+  surCentral: { x: -3.6, z: 2.95 },
+  refugio: { x: -7.55, z: -1.25 },
   puertaRefugio: { x: -6.2, z: -1.25 },
-  aproximacionRefugio: { x: -5.6, z: -1.25 },
+  aproximacionRefugio: { x: -5.5, z: -1.25 },
   invernaderoPasillo: { x: -5.5, z: 0 },
-  invernaderoOesteNorte: { x: -5.5, z: -2.9 },
-  invernaderoNorte: { x: -3.6, z: -3.3 },
-  pasilloNorte: { x: 0.1, z: -3.3 },
+  invernaderoOesteNorte: { x: -5.5, z: -2.95 },
+  invernaderoNorte: { x: -3.6, z: -2.95 },
+  invernaderoEsteNorte: { x: -1.85, z: -2.95 },
+  invernaderoEsteCentro: { x: -1.85, z: 0 },
+  invernaderoEsteSur: { x: -1.85, z: 2.95 },
   pasilloCentro: { x: 0.1, z: 0 },
-  comunicaciones: { x: 4.0, z: 0.1 },
-  comunicacionesEnergia: { x: 3.6, z: 1.2 },
+  pasilloEste: { x: 1.8, z: 0.2 },
+  comunicaciones: { x: 3.55, z: 0.2 },
+  comunicacionesEnergia: { x: 3.6, z: 1.32 },
   puertaEnergia: { x: 3.6, z: 1.8 },
-  energia: { x: 3.6, z: 3.2 },
-  comunicacionesEnfermeria: { x: 7.6, z: 1.2 },
+  energia: { x: 3.6, z: 3.15 },
+  comunicacionesEnfermeria: { x: 7.6, z: 1.32 },
   puertaEnfermeria: { x: 7.6, z: 1.8 },
-  enfermeria: { x: 7.6, z: 3.2 },
+  enfermeria: { x: 7.6, z: 3.15 },
 };
 
 const CONEXIONES: Record<NodoId, NodoId[]> = {
@@ -69,38 +68,27 @@ const CONEXIONES: Record<NodoId, NodoId[]> = {
   oesteNorte: ['habitacionNorte', 'invernaderoOesteNorte'],
   oesteSur: ['habitacionSur', 'invernaderoPasillo', 'oesteExtremoSur'],
   oesteExtremoSur: ['habitacionExtremoSur', 'oesteSur', 'surCentral'],
-  surCentral: ['oesteExtremoSur', 'surPasillo'],
-  surPasillo: ['surCentral', 'pasilloCentro'],
-  wcNorte: ['puertaWcNorte'],
-  wcSur: ['puertaWcSur'],
-  puertaWcNorte: ['wcNorte', 'invernaderoPasillo'],
-  puertaWcSur: ['wcSur', 'invernaderoPasillo'],
-  gimnasio: ['puertaGimnasio'],
-  puertaGimnasio: ['gimnasio', 'antesGimnasio'],
-  antesGimnasio: ['puertaGimnasio', 'comunicaciones'],
-  banoEste: ['puertaBano'],
-  puertaBano: ['banoEste', 'antesBano', 'pasoBano'],
-  antesBano: ['puertaBano', 'comunicaciones'],
-  pasoBano: ['puertaBano', 'banoCentral'],
-  banoCentral: ['pasoBano'],
+  surCentral: ['oesteExtremoSur', 'invernaderoEsteSur'],
+  invernaderoEsteSur: ['surCentral', 'invernaderoEsteCentro'],
   refugio: ['puertaRefugio'],
   puertaRefugio: ['refugio', 'aproximacionRefugio'],
   aproximacionRefugio: ['puertaRefugio', 'invernaderoPasillo', 'invernaderoOesteNorte'],
-  invernaderoPasillo: ['aproximacionRefugio', 'invernaderoOesteNorte'],
-  invernaderoOesteNorte: ['aproximacionRefugio', 'invernaderoPasillo', 'invernaderoNorte'],
-  invernaderoNorte: ['invernaderoOesteNorte', 'pasilloNorte'],
-  pasilloNorte: ['invernaderoNorte', 'pasilloCentro'],
-  pasilloCentro: ['pasilloNorte', 'comunicaciones'],
-  comunicaciones: ['pasilloCentro', 'comunicacionesEnergia', 'comunicacionesEnfermeria'],
-  comunicacionesEnergia: ['comunicaciones', 'puertaEnergia'],
+  invernaderoPasillo: ['aproximacionRefugio', 'invernaderoOesteNorte', 'oesteSur'],
+  invernaderoOesteNorte: ['aproximacionRefugio', 'invernaderoPasillo', 'invernaderoNorte', 'oesteNorte'],
+  invernaderoNorte: ['invernaderoOesteNorte', 'invernaderoEsteNorte'],
+  invernaderoEsteNorte: ['invernaderoNorte', 'invernaderoEsteCentro'],
+  invernaderoEsteCentro: ['invernaderoEsteNorte', 'invernaderoEsteSur', 'pasilloCentro'],
+  pasilloCentro: ['invernaderoEsteCentro', 'pasilloEste'],
+  pasilloEste: ['pasilloCentro', 'comunicaciones'],
+  comunicaciones: ['pasilloEste', 'comunicacionesEnergia'],
+  comunicacionesEnergia: ['comunicaciones', 'puertaEnergia', 'comunicacionesEnfermeria'],
   puertaEnergia: ['comunicacionesEnergia', 'energia'],
   energia: ['puertaEnergia'],
-  comunicacionesEnfermeria: ['comunicaciones', 'puertaEnfermeria'],
+  comunicacionesEnfermeria: ['comunicacionesEnergia', 'puertaEnfermeria'],
   puertaEnfermeria: ['comunicacionesEnfermeria', 'enfermeria'],
   enfermeria: ['puertaEnfermeria'],
 };
 
-// Completar las conexiones inversas de las ramas fijas añadidas al mapa.
 for (const [id, vecinos] of Object.entries(CONEXIONES) as [NodoId, NodoId[]][]) {
   for (const vecino of vecinos) {
     if (!CONEXIONES[vecino].includes(id)) CONEXIONES[vecino].push(id);
@@ -117,10 +105,10 @@ const NODO_POR_MODULO: Record<ModuleId, NodoId> = {
 };
 
 const POSICIONES_REFUGIO: Record<CrewId, PuntoRuta> = {
-  comandante: { x: -8.7, z: -0.7 },
-  ingeniero: { x: -8.7, z: -1.8 },
-  medico: { x: -7.7, z: -1.8 },
-  cientifico: { x: -7.7, z: -0.7 },
+  comandante: { x: -7.65, z: -0.68 },
+  cientifico: { x: -7.0, z: -0.68 },
+  ingeniero: { x: -7.55, z: -1.92 },
+  medico: { x: -7.55, z: -1.25 },
 };
 
 function nodoMasCercano(x: number, z: number): NodoId | null {
@@ -129,6 +117,16 @@ function nodoMasCercano(x: number, z: number): NodoId | null {
   for (const [id, p] of Object.entries(NODOS) as [NodoId, PuntoRuta][]) {
     const d = Math.hypot(p.x - x, p.z - z);
     if (d < mejorDist && segmentoTransitable({ x, z }, p)) {
+      mejorDist = d;
+      mejor = id;
+    }
+  }
+  if (mejor) return mejor;
+  // Si el personaje está pegado a un borde y ningún segmento directo pasa con holgura,
+  // elige el nodo más cercano en distancia euclidiana para desatorarlo suavemente.
+  for (const [id, p] of Object.entries(NODOS) as [NodoId, PuntoRuta][]) {
+    const d = Math.hypot(p.x - x, p.z - z);
+    if (d < mejorDist) {
       mejorDist = d;
       mejor = id;
     }
