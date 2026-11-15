@@ -26,15 +26,14 @@
 .reporte h1 { margin: 0 0 12px; font-size: clamp(1.4rem, 4vw, 2rem); }
 .reporte h2 { margin: 20px 0 8px; font-size: 1.1rem; }
 .reporte p { margin: 12px 0; }
-.reporte-tripulacion { padding-left: 1.3em; margin: 12px 0; }
-.reporte-tripulacion li + li { margin-top: 6px; }
 .reporte a { color: #a9dcff; }
 .reporte-grafica { margin: 16px 0; }
 .reporte-grafica figcaption { font-weight: 700; }
 .reporte-grafica svg { width: 100%; height: auto; display: block; }
 .reporte-grafica svg text { fill: #f5f2ec; font-size: 13px; }
 .reporte-grafica-rejilla { stroke: #64768a; stroke-width: 0.6; }
-.reporte-grafica-linea { fill: none; stroke: #f5a658; stroke-width: 2.5; stroke-linejoin: round; }
+.reporte-grafica-linea { fill: none; stroke: #f5a658; stroke-width: 2.5; stroke-linejoin: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: reporte-dibujar 2.2s 1.6s ease-out forwards; }
 .reporte-grafica p { font-size: 0.85rem; }
 .reporte button {
   margin-top: 10px;
@@ -46,4 +45,57 @@
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+/* ── Resultado animado ─────────────────────────────── */
+.reporte-panel { animation: reporte-entrar 0.35s ease-out; }
+.reporte h1 { text-align: center; }
+
+.reporte-estrellas {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 4px 0 8px;
+  font-size: clamp(2.6rem, 9vw, 3.6rem);
+  line-height: 1;
+}
+.reporte-estrella {
+  color: #3a4a60;
+  opacity: 0;
+  transform: scale(0.3);
+  animation: reporte-estrella 0.5s cubic-bezier(.3, 1.6, .5, 1) forwards;
+}
+.reporte-estrella--llena { color: #f9c846; text-shadow: 0 0 18px rgba(249, 200, 70, 0.55); }
+
+.reporte-barras { display: flex; flex-direction: column; gap: 12px; margin: 10px 0; }
+.reporte-barra__cabecera { display: flex; justify-content: space-between; gap: 12px; font-weight: 700; }
+.reporte-barra__valor { font-variant-numeric: tabular-nums; }
+.reporte-barra__pista { height: 14px; margin: 5px 0 3px; border-radius: 999px; background: #0e1726; overflow: hidden; }
+.reporte-barra__relleno {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f9c846, #f5a658);
+  transition: width 1.4s cubic-bezier(.2, .8, .2, 1);
+}
+.reporte-barra--referencia .reporte-barra__relleno { background: repeating-linear-gradient(45deg, #e24b4a 0 8px, #b93a39 8px 16px); }
+.reporte-barra--referencia .reporte-barra__nombre { color: #ffb4a8; }
+.reporte-barra__detalle { font-size: 0.85rem; color: #c9d3e0; }
+.reporte-explica { font-size: 0.9rem; color: #c9d3e0; }
+.reporte-pronostico { font-weight: 700; color: #ffd8a8; }
+.reporte-consejos { margin: 8px 0; padding-left: 1.3em; }
+.reporte-consejos li + li { margin-top: 6px; }
+.reporte-fuentes { font-size: 0.85rem; }
+
+@keyframes reporte-entrar { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes reporte-estrella { to { opacity: 1; transform: scale(1); } }
+@keyframes reporte-dibujar { to { stroke-dashoffset: 0; } }
+
+.reporte-panel--sin-animacion *, .reporte-panel--sin-animacion { animation: none !important; transition: none !important; }
+.reporte-panel--sin-animacion .reporte-estrella { opacity: 1; transform: none; }
+.reporte-panel--sin-animacion .reporte-grafica-linea { stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .reporte-estrella { opacity: 1; transform: none; animation: none; }
+  .reporte-grafica-linea { stroke-dashoffset: 0; animation: none; }
+  .reporte-barra__relleno { transition: none; }
 }

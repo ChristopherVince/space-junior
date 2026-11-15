@@ -1,8 +1,18 @@
-// Frente 3 · Bots y diálogos (#13): reglas deterministas sin IA.
-// Cada bot revisa su sistema y, si está en riesgo, pide energía al comandante
-// rotando entre los 3 compañeros y alternando sus frases de i18n.
+// Frente 3 · Tripulación (bots sin IA).
+//
+// Dos formas de hablar:
+// - Peticiones (detienen el reloj): solo cuando hay un problema que el niño PUEDE
+//   resolver dando energía, y aceptar lo resuelve de verdad.
+// - Avisos (no detienen nada): globos cortos en momentos clave (alerta, tormenta).
+//
+// Reglas para que no aburra:
+// - Cada situación habla una vez cuando aparece; vuelve a hablar solo si el
+//   problema se arregla y después regresa.
+// - Ninguna frase se repite en la misma partida; si se acaban, ese personaje calla.
+// - Espera mínima entre peticiones y tope por partida.
+import balance from '../data/balance.json';
 import { store } from '../state/store';
-import type { CrewId, GameState, ModuleId } from '../state/types';
+import type { CrewId, GameState, ModuleId, Phase } from '../state/types';
 
 export type BotId = Exclude<CrewId, 'comandante'>;
 
@@ -31,83 +41,134 @@ export function destinoDeBot(e: GameState, bot: ConfigBotEscena): ModuleId {
   return bot.moduloBase;
 }
 
-export interface ReglaBot {
+const energiaEn = (e: GameState, m: ModuleId) => e.energiaAsignada[m] ?? 0;
+/** Horas que faltan para la llegada que dice el pronóstico (lo que sabe el jugador). */
+const horasHastaPronostico = (e: GameState) =>
+  e.pronostico ? e.pronostico.horasPronosticadas - e.hora : Infinity;
+/** "La tormenta se acerca": a menos de un sol más el margen del pronóstico. */
+const tormentaCerca = (e: GameState) =>
+  horasHastaPronostico(e) <= balance.horasPorSol + (e.pronostico?.margenHoras ?? 0);
+
+export interface SituacionPeticion {
+  id: string;
   quien: BotId;
-  enRiesgo: (e: GameState) => boolean;
-  textoId: string;
+  /** Módulo que recibe 1 unidad de energía si el jugador acepta. */
+  modulo: ModuleId;
+  activa: (e: GameState) => boolean;
+  /** Frases posibles; cada una se dice como máximo una vez por partida. */
   textos: readonly string[];
 }
 
-export const REGLAS: ReglaBot[] = [
+/** En orden de prioridad: si varias aplican, habla la primera. */
+export const SITUACIONES: readonly SituacionPeticion[] = [
   {
+    id: 'soporteCritico',
     quien: 'cientifico',
-    enRiesgo: (e) => (e.energiaAsignada.invernadero ?? 0) < 3 || e.recursos.soporteVital < 85,
-    textoId: 'bot.cientifico.invernadero',
-    textos: ['bot.cientifico.invernadero', 'bot.cientifico.2', 'bot.cientifico.3'],
+    modulo: 'invernadero',
+    activa: (e) => e.recursos.soporteVital < 50,
+    textos: ['bot.cientifico.critico1', 'bot.cientifico.critico2'],
   },
   {
+    id: 'blindajeTormentaCerca',
     quien: 'ingeniero',
-    enRiesgo: (e) => e.recursos.blindaje < 60 && (e.energiaAsignada.energia ?? 0) < 4,
-    textoId: 'bot.ingeniero.blindaje',
+    modulo: 'energia',
+    activa: (e) => tormentaCerca(e) && e.recursos.blindaje < 60 && energiaEn(e, 'energia') < 5,
     textos: ['bot.ingeniero.blindaje', 'bot.ingeniero.2', 'bot.ingeniero.3'],
   },
   {
-    quien: 'medico',
-    enRiesgo: (e) =>
-      ((e.energiaAsignada.enfermeria ?? 0) < 2 && e.tripulacion.comandante.dosis >= 20) ||
-      e.tripulacion.comandante.dosis > 120,
-    textoId: 'bot.medico.dosis',
-    textos: ['bot.medico.dosis', 'bot.medico.2', 'bot.medico.3'],
+    id: 'invernaderoSinEnergia',
+    quien: 'cientifico',
+    modulo: 'invernadero',
+    activa: (e) => energiaEn(e, 'invernadero') < 3,
+    textos: ['bot.cientifico.invernadero', 'bot.cientifico.2', 'bot.cientifico.3'],
+  },
+  {
+    id: 'sinComunicaciones',
+    quien: 'cientifico',
+    modulo: 'comunicaciones',
+    activa: (e) => tormentaCerca(e) && energiaEn(e, 'comunicaciones') === 0,
+    textos: ['bot.cientifico.comunicaciones1', 'bot.cientifico.comunicaciones2'],
   },
 ];
 
-// Orden rotativo para que los 3 bots se turnen cuando varios sistemas compiten por energía.
-let cursorBot = 0;
-let horaUltimaPeticion = -99;
-const indiceFrase: Record<BotId, number> = {
-  cientifico: 0,
-  ingeniero: 0,
-  medico: 0,
-};
+/** Horas de juego mínimas entre dos peticiones (~18 s reales con 1.5 s por hora). */
+export const HORAS_ENTRE_PETICIONES = 12;
+/** Peticiones máximas por partida. */
+export const MAX_PETICIONES = 8;
 
-const HORAS_ENTRE_PETICIONES = 2;
+export interface AvisoTripulacion {
+  de: BotId;
+  textoId: string;
+}
+const oyentesAvisos = new Set<(aviso: AvisoTripulacion) => void>();
+
+/** La interfaz se suscribe para mostrar los avisos como globos que se van solos. */
+export function suscribirAvisos(fn: (aviso: AvisoTripulacion) => void): () => void {
+  oyentesAvisos.add(fn);
+  return () => { oyentesAvisos.delete(fn); };
+}
+
+// Estado de la tripulación durante la partida (se reinicia con reiniciarBots).
+let horaUltimaPeticion = -Infinity;
+let peticionesHechas = 0;
+const frasesDichas = new Set<string>();
+const situacionesAvisadas = new Set<string>();
+let faseAnterior: Phase | null = null;
 
 export function reiniciarBots() {
-  cursorBot = 0;
-  horaUltimaPeticion = -99;
-  indiceFrase.cientifico = 0;
-  indiceFrase.ingeniero = 0;
-  indiceFrase.medico = 0;
+  horaUltimaPeticion = -Infinity;
+  peticionesHechas = 0;
+  frasesDichas.clear();
+  situacionesAvisadas.clear();
+  faseAnterior = null;
+}
+
+function avisar(de: BotId, textoId: string) {
+  if (frasesDichas.has(textoId)) return;
+  frasesDichas.add(textoId);
+  oyentesAvisos.forEach((fn) => fn({ de, textoId }));
+}
+
+/** Avisos en los momentos clave; se detectan al cambiar de fase. */
+function revisarAvisos(e: GameState) {
+  const anterior = faseAnterior;
+  faseAnterior = e.fase;
+  if (anterior === null || anterior === e.fase) return;
+
+  if (e.fase === 'refugio') {
+    avisar('medico', 'bot.medico.alerta');
+  } else if (e.fase === 'tormenta') {
+    if (anterior === 'preparacion') {
+      // Llegó sin alerta temprana: no había energía en Comunicaciones.
+      avisar('ingeniero', 'bot.ingeniero.sinAlerta');
+    }
+    avisar('medico', e.tripulacion.comandante.modulo === 'refugio' ? 'bot.medico.enRefugio' : 'bot.medico.fueraRefugio');
+  }
 }
 
 export function revisarBots() {
   const e = store.getState();
-  if (e.peticionActiva || e.fase === 'reporte' || e.fase === 'tormenta') return;
+  if (e.fase === 'aviso' || e.fase === 'reporte') return;
 
-  // Si se reinició la partida, reiniciamos el contador de horas.
-  if (e.hora < horaUltimaPeticion) {
-    horaUltimaPeticion = -99;
-  }
+  revisarAvisos(e);
 
+  // Una situación que dejó de aplicar puede volver a hablar si regresa.
+  for (const s of SITUACIONES) if (!s.activa(e)) situacionesAvisadas.delete(s.id);
+
+  if (e.peticionActiva || e.fase !== 'preparacion') return;
+  if (peticionesHechas >= MAX_PETICIONES) return;
   if (e.hora - horaUltimaPeticion < HORAS_ENTRE_PETICIONES) return;
 
-  for (let offset = 0; offset < REGLAS.length; offset++) {
-    const idx = (cursorBot + offset) % REGLAS.length;
-    const regla = REGLAS[idx];
-    if (regla.enRiesgo(e)) {
-      const turnoFrase = indiceFrase[regla.quien] % regla.textos.length;
-      const textoElegido = regla.textos[turnoFrase];
+  for (const s of SITUACIONES) {
+    if (situacionesAvisadas.has(s.id) || !s.activa(e)) continue;
+    situacionesAvisadas.add(s.id);
+    const texto = s.textos.find((id) => !frasesDichas.has(id));
+    if (!texto) continue; // ya no quedan frases nuevas: este problema no se vuelve a pedir
 
-      indiceFrase[regla.quien] = turnoFrase + 1;
-      cursorBot = (idx + 1) % REGLAS.length;
-      horaUltimaPeticion = e.hora;
-
-      store.dispatch({
-        type: 'MOSTRAR_PETICION',
-        de: regla.quien,
-        textoId: textoElegido,
-      });
-      return;
-    }
+    frasesDichas.add(texto);
+    peticionesHechas++;
+    horaUltimaPeticion = e.hora;
+    store.dispatch({ type: 'MOSTRAR_PETICION', de: s.quien, textoId: texto, modulo: s.modulo });
+    return;
   }
 }
