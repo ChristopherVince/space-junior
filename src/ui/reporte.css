@@ -99,3 +99,27 @@
   .reporte-grafica-linea { stroke-dashoffset: 0; animation: none; }
   .reporte-barra__relleno { transition: none; }
 }
+
+/* Botón grande hacia la animación y botones de la pantalla de fin */
+.reporte .reporte-ver-historia {
+  display: block;
+  margin: 18px auto 4px;
+  padding: 16px 30px;
+  border: 2px solid #fff3c4;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fae282 0%, #f3c846 100%);
+  box-shadow: 0 6px 16px rgba(249, 200, 70, 0.3);
+  color: #3f2417;
+  font-size: 1.25rem;
+  font-weight: 900;
+  animation: reporte-latido 1.6s ease-in-out 3s infinite;
+}
+@keyframes reporte-latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+.reporte .historia-fin__acciones .reporte-ver-historia { margin: 0; animation: none; }
+.reporte .historia-fin__secundario {
+  margin-top: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  color: #f5f2ec;
+}
+@media (prefers-reduced-motion: reduce) { .reporte .reporte-ver-historia { animation: none; } }
