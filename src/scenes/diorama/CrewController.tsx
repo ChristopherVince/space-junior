@@ -158,7 +158,7 @@ export function CrewController() {
         const rz = objetivo.z - st.z;
         const dist = Math.hypot(rx, rz);
 
-        if (dist < 0.04) {
+        if (dist < 0.0001) {
           st.ruta.shift();
           if (st.ruta.length === 0) {
             store.dispatch({ type: 'MOVER_TRIPULANTE', quien: b.id, modulo: st.destino });
@@ -170,7 +170,9 @@ export function CrewController() {
           st.x = siguiente.x;
           st.z = siguiente.z;
 
-          if (Math.hypot(objetivo.x - st.x, objetivo.z - st.z) < 0.04 || avanzo < 0.0001) {
+          // Red de seguridad: si un muro lo frena por completo, pasa al siguiente punto
+          // en vez de quedarse atorado. Con rutas válidas no debería ocurrir.
+          if (Math.hypot(objetivo.x - st.x, objetivo.z - st.z) < 0.0001 || avanzo < 0.0001) {
             st.ruta.shift();
             if (st.ruta.length === 0) {
               store.dispatch({ type: 'MOVER_TRIPULANTE', quien: b.id, modulo: st.destino });
