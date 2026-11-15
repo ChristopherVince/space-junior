@@ -1,8 +1,8 @@
 .fuentes-abrir {
   position: absolute;
-  top: 54px;
+  top: 100px;
   right: 8px;
-  z-index: 2;
+  z-index: 20;
 }
 
 .fuentes-abrir, .fuentes-dialogo button {

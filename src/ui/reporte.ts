@@ -54,7 +54,7 @@ export function montarReporte(raiz: HTMLElement): () => void {
 
     const panel = document.createElement('div');
     panel.className = 'reporte-panel';
-    const titulo = texto('h1', t('reporte.titulo'));
+    const titulo = texto('h1', t(estado.motivoFin === 'sinSoporteVital' ? 'reporte.sinSoporteVital' : 'reporte.titulo'));
     titulo.id = 'reporte-titulo';
     panel.append(titulo, texto('p', t('reporte.dosisIntro')));
 
