@@ -2,9 +2,34 @@
 // Cada bot revisa su sistema y, si está en riesgo, pide energía al comandante
 // rotando entre los 3 compañeros y alternando sus frases de i18n.
 import { store } from '../state/store';
-import type { CrewId, GameState } from '../state/types';
+import type { CrewId, GameState, ModuleId } from '../state/types';
 
 export type BotId = Exclude<CrewId, 'comandante'>;
+
+export interface ConfigBotEscena {
+  id: BotId;
+  moduloBase: ModuleId;
+  posInicial: [number, number];
+  offset: [number, number];
+}
+
+// Posiciones iniciales dentro de cada módulo en la planta interior de Mars Dune Alpha (#14).
+export const BOTS_ESCENA: readonly ConfigBotEscena[] = [
+  { id: 'ingeniero', moduloBase: 'energia', posInicial: [3.6, 3.2], offset: [-0.45, 0.25] },
+  { id: 'medico', moduloBase: 'enfermeria', posInicial: [7.6, 3.2], offset: [0.4, -0.25] },
+  { id: 'cientifico', moduloBase: 'invernadero', posInicial: [-5.5, 0], offset: [-0.25, 0.55] },
+];
+
+/** Determina a qué módulo debe dirigirse un bot según el estado actual (#14). */
+export function destinoDeBot(e: GameState, bot: ConfigBotEscena): ModuleId {
+  if (e.fase === 'refugio' || e.fase === 'tormenta') {
+    return 'refugio';
+  }
+  if (e.peticionActiva?.de === bot.id) {
+    return e.tripulacion.comandante.modulo;
+  }
+  return bot.moduloBase;
+}
 
 export interface ReglaBot {
   quien: BotId;

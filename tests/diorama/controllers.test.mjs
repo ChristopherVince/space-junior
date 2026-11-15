@@ -52,7 +52,24 @@ for (const inicial of ['preparacion', 'refugio', 'tormenta']) {
       CrewController();
       for (const effect of h.effects) cleanups.push(effect());
       const fase = valor => { estado = { ...estado, fase: valor }; for (const f of listeners) f(estado); };
-      if (inicial === 'preparacion') fase('refugio');
+      if (inicial === 'preparacion') {
+        // La integración conserva las peticiones y el regreso del frente 3.
+        estado = { ...estado, peticionActiva: { de: 'ingeniero' }, tripulacion: {
+          ...estado.tripulacion, comandante: { modulo: 'enfermeria' },
+        } };
+        fase('preparacion');
+        for (let frame = 0; frame < 900; frame++) for (const f of h.frames) f({}, 1 / 60);
+        assert.equal(estado.tripulacion.ingeniero.modulo, 'enfermeria');
+        estado = { ...estado, peticionActiva: null };
+        fase('preparacion');
+        for (let frame = 0; frame < 900; frame++) for (const f of h.frames) f({}, 1 / 60);
+        assert.equal(estado.tripulacion.ingeniero.modulo, 'energia');
+        // Interrumpir una nueva petición en curso debe priorizar la evacuación.
+        estado = { ...estado, peticionActiva: { de: 'ingeniero' } };
+        fase('preparacion');
+        for (let frame = 0; frame < 20; frame++) for (const f of h.frames) f({}, 1 / 60);
+        fase('refugio');
+      }
       for (let frame = 0; frame < 2400; frame++) {
         if (frame === 20) fase('tormenta');
         events.get('keydown')?.({ key: 'd' });
