@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { store } from '../../state/store';
 import { getIdioma, t } from '../../i18n';
-import type { ModuleId, Phase } from '../../state/types';
+import type { CrewId, GameState, ModuleId, Phase } from '../../state/types';
 import { observarObjetivoGuia } from '../../ui/guia';
 import { AstronautController, type DestinoTactil } from './AstronautController';
 import { ZONAS_MODULOS, type ZonaModulo } from './collision';
@@ -115,9 +115,45 @@ interface ZonaInteractivaProps {
   moduloActual: ModuleId;
   hoverModulo: ModuleId | null;
   esObjetivo: boolean;
+  fallaTexto: string | null;
   idioma: ReturnType<typeof getIdioma>;
   onSelect: (id: ModuleId) => void;
   onHover: (id: ModuleId | null) => void;
+}
+
+const TRIPULACION_IDS: readonly CrewId[] = ['comandante', 'ingeniero', 'medico', 'cientifico'];
+
+function obtenerFallaModulo(id: ModuleId, e: GameState): string | null {
+  if (e.fase !== 'tormenta') return null;
+
+  const alguienFueraAqui =
+    id !== 'refugio' && TRIPULACION_IDS.some((c) => e.tripulacion[c].modulo === id);
+
+  if (id === 'comunicaciones' && (e.energiaAsignada.comunicaciones ?? 0) === 0) {
+    return t('hud.fallas.sinComunicaciones');
+  }
+  if (id === 'refugio' && e.recursos.blindaje < 60) {
+    return t('hud.fallas.blindajeBajo', { pct: Math.round(e.recursos.blindaje) });
+  }
+  if (id === 'energia') {
+    if (e.recursos.blindaje < 60) {
+      return t('hud.fallas.energiaBlindaje', { pct: Math.round(e.recursos.blindaje) });
+    }
+    return t('hud.fallas.panelesApagados');
+  }
+  if (id === 'invernadero') {
+    if (e.recursos.soporteVital < 50) {
+      return t('hud.fallas.soporteBajo', { pct: Math.round(e.recursos.soporteVital) });
+    }
+    if ((e.energiaAsignada.invernadero ?? 0) < 4) {
+      return t('hud.fallas.invernaderoDescuidado');
+    }
+    return t('hud.fallas.invernaderoPausado');
+  }
+  if (alguienFueraAqui) {
+    return t('hud.fallas.fueraRefugio');
+  }
+  return null;
 }
 
 function ZonaInteractivaModulo({
@@ -126,25 +162,29 @@ function ZonaInteractivaModulo({
   moduloActual,
   hoverModulo,
   esObjetivo,
+  fallaTexto,
   onSelect,
   onHover,
 }: ZonaInteractivaProps) {
   const matPisoRef = useRef<THREE.MeshBasicMaterial>(null);
   const esRefugio = zona.id === 'refugio';
   const enAlertaRefugio = esRefugio && (fase === 'refugio' || fase === 'tormenta');
+  const tieneFalla = Boolean(fallaTexto);
   const estaAdentro = moduloActual === zona.id;
   const estaHover = hoverModulo === zona.id;
   const mostrarEtiqueta = fase !== 'aviso' && fase !== 'reporte';
 
-  const colorBase = enAlertaRefugio
+  const colorBase = enAlertaRefugio && !tieneFalla
     ? '#22c55e'
-    : esObjetivo
-      ? '#fbbf24'
-      : estaHover
+    : tieneFalla
+      ? '#ef4444'
+      : esObjetivo
         ? '#fbbf24'
-        : estaAdentro
-          ? '#f59e0b'
-          : zona.color;
+        : estaHover
+          ? '#fbbf24'
+          : estaAdentro
+            ? '#f59e0b'
+            : zona.color;
 
   const opacidadBase = esObjetivo
     ? 0.4
@@ -234,28 +274,35 @@ function ZonaInteractivaModulo({
         </mesh>
       )}
 
-      {/* Etiqueta flotante con ícono y nombre localizado sobre cada módulo (#43) */}
+      {/* Etiqueta flotante con ícono, nombre localizado y aviso de falla sobre cada módulo (#43) */}
       {mostrarEtiqueta && (
         <Html
           position={[zona.etiquetaPos[0] - zona.x, zona.etiquetaPos[1], zona.etiquetaPos[2] - zona.z]}
           center
           zIndexRange={[8, 0]}
         >
-          <button
-            type="button"
-            className={clasesEtiqueta}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect(zona.id);
-            }}
-            onMouseEnter={() => onHover(zona.id)}
-            onMouseLeave={() => onHover(null)}
-          >
-            <span className="etiqueta-modulo__icono" aria-hidden="true">
-              {zona.icono}
-            </span>
-            <span className="etiqueta-modulo__texto">{t(`modulo.${zona.id}`)}</span>
-          </button>
+          <div className="etiqueta-modulo-contenedor">
+            {fallaTexto && (
+              <div className="falla-modulo" role="status">
+                {fallaTexto}
+              </div>
+            )}
+            <button
+              type="button"
+              className={clasesEtiqueta}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(zona.id);
+              }}
+              onMouseEnter={() => onHover(zona.id)}
+              onMouseLeave={() => onHover(null)}
+            >
+              <span className="etiqueta-modulo__icono" aria-hidden="true">
+                {zona.icono}
+              </span>
+              <span className="etiqueta-modulo__texto">{t(`modulo.${zona.id}`)}</span>
+            </button>
+          </div>
         </Html>
       )}
 
@@ -295,6 +342,7 @@ export function MarsDioramaScene() {
   const [hoverModulo, setHoverModulo] = useState<ModuleId | null>(null);
   const [moduloActual, setModuloActual] = useState<ModuleId>(() => store.getState().tripulacion.comandante.modulo);
   const [fase, setFase] = useState<Phase>(() => store.getState().fase);
+  const [estadoJuego, setEstadoJuego] = useState<GameState>(() => store.getState());
   const [idioma, setIdiomaEstado] = useState(() => getIdioma());
   const [objetivoGuia, setObjetivoGuia] = useState<ModuleId | null>(null);
 
@@ -304,6 +352,7 @@ export function MarsDioramaScene() {
     const desuscribir = store.subscribe((estado) => {
       setModuloActual(estado.tripulacion.comandante.modulo);
       setFase(estado.fase);
+      setEstadoJuego(estado);
       setIdiomaEstado(getIdioma());
       if (estado.fase === 'aviso') setDestinoTactil(null);
     });
@@ -379,6 +428,7 @@ export function MarsDioramaScene() {
             moduloActual={moduloActual}
             hoverModulo={hoverModulo}
             esObjetivo={objetivoGuia === z.id}
+            fallaTexto={obtenerFallaModulo(z.id, estadoJuego)}
             idioma={idioma}
             onSelect={seleccionarModulo}
             onHover={(id) => setHoverModulo((prev) => (id === null ? null : id ?? prev))}

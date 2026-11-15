@@ -53,8 +53,10 @@ body {
 .hud-dia {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  padding: 13px 24px;
+  min-width: 164px;
+  padding: 13px 22px;
   background: rgba(251, 238, 226, 0.94);
   border: 1.5px solid rgba(255, 255, 255, 0.65);
   border-radius: 999px;
@@ -62,7 +64,9 @@ body {
   color: #4a2c1d;
   font-size: 18px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .hud-dia__estrella {
@@ -75,27 +79,33 @@ body {
   background: #fce19c;
   color: #8c5319;
   font-size: 15px;
+  flex-shrink: 0;
 }
 
 /* Cápsula marrón oscura de recursos */
 .hud-capsula {
   display: flex;
   align-items: center;
-  gap: 32px;
-  padding: 15px 32px;
+  gap: 24px;
+  padding: 14px 28px;
   background: rgba(126, 82, 66, 0.88);
   border: 1.5px solid rgba(255, 235, 220, 0.35);
   border-radius: 999px;
   box-shadow: 0 6px 16px rgba(74, 34, 18, 0.22);
   backdrop-filter: blur(6px);
+  box-sizing: border-box;
 }
 
-/* Chip de recurso: icono a la izq + (% y barra) a la der */
+/* Chip de recurso con ancho fijo para que nunca cambie de tamaño al variar % o alertas */
 .hud-chip {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-width: 136px;
+  gap: 10px;
+  width: 176px;
+  min-width: 176px;
+  max-width: 176px;
+  flex: 0 0 176px;
+  box-sizing: border-box;
 }
 
 .hud-chip__icono {
@@ -113,32 +123,59 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1;
-  min-width: 88px;
+  width: 130px;
+  min-width: 130px;
+  max-width: 130px;
+  flex: 0 0 130px;
 }
 
 .hud-chip__fila-texto {
   display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  white-space: nowrap;
+  min-height: 20px;
+}
+
+.hud-chip__nombre {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #fbeee2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-chip__derecha {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .hud-chip__pct {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   color: #fff8f0;
   line-height: 1;
+  min-width: 40px;
+  text-align: right;
 }
 
 .hud-chip__bajo {
-  font-size: 12px;
+  font-size: 10.5px;
   font-weight: 800;
   color: #ffd2cc;
-  background: rgba(214, 54, 48, 0.85);
-  padding: 2px 7px;
+  background: rgba(214, 54, 48, 0.9);
+  padding: 2px 5px;
   border-radius: 999px;
-  line-height: 1.1;
+  line-height: 1;
+}
+
+.hud-chip__bajo[hidden] {
+  display: none !important;
 }
 
 /* Pista (track) de la barra */
@@ -153,17 +190,17 @@ body {
 .hud-chip__relleno {
   height: 100%;
   border-radius: 999px;
-  transition: width 0.4s ease;
+  transition: width 0.35s ease, background-color 0.25s ease;
 }
 
 .hud-chip__relleno--energia  { background: linear-gradient(90deg, #f9d448, #f2b726); }
 .hud-chip__relleno--soporte  { background: linear-gradient(90deg, #98e38b, #5ec465); }
 .hud-chip__relleno--blindaje { background: linear-gradient(90deg, #52b8f5, #3897e0); }
-.hud-chip__relleno--bajo     { background: #e24b4a !important; animation: hud-pulso 1s ease-in-out infinite; }
+.hud-chip__relleno--bajo     { background: linear-gradient(90deg, #ef4444, #dc2626) !important; }
 
-@keyframes hud-pulso { 0%,100%{opacity:1} 50%{opacity:.45} }
+@keyframes hud-pulso { 0%,100%{opacity:1} 50%{opacity:.72} }
 
-/* ── Arriba a la derecha: Aviso de tormenta ─────── */
+/* ── Arriba a la derecha: Aviso de tormenta (ancho estable sin saltos) ─────── */
 .hud-derecha-arriba {
   position: absolute;
   top: 18px;
@@ -176,39 +213,57 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 22px;
+  width: 326px;
+  min-width: 326px;
+  max-width: 326px;
+  padding: 12px 20px;
   border-radius: 999px;
   font-size: 16px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   color: #fff6f2;
-  background: rgba(169, 58, 53, 0.92);
+  background: rgba(169, 58, 53, 0.94);
   border: 2px solid #f0a79e;
   box-shadow: 0 4px 14px rgba(120, 28, 24, 0.28);
   white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.hud-tormenta[hidden] {
+  display: none !important;
 }
 
 .hud-tormenta__icono {
   display: flex;
   align-items: center;
   color: #ffcabf;
+  flex-shrink: 0;
 }
 
 .hud-tormenta__contenido {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
 }
 
 .hud-tormenta__texto {
-  line-height: 1.1;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hud-tormenta__pista {
   width: 100%;
-  height: 5px;
+  height: 6px;
   background: rgba(255, 255, 255, 0.22);
   border-radius: 999px;
   overflow: hidden;
+}
+
+.hud-tormenta__pista[hidden] {
+  display: none !important;
 }
 
 .hud-tormenta__franja {
@@ -1146,7 +1201,44 @@ body {
   }
 }
 
-/* ── Etiquetas flotantes de módulos (#43) ─────────────────── */
+/* ── Etiquetas flotantes de módulos (#43) y avisos de falla por área ── */
+.etiqueta-modulo-contenedor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.falla-modulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 220px;
+  padding: 5px 11px;
+  border-radius: 12px;
+  border: 2px solid #fecaca;
+  background: rgba(153, 27, 27, 0.95);
+  color: #fff5f5;
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+  box-shadow: 0 6px 16px rgba(69, 10, 10, 0.45);
+  pointer-events: none;
+  animation: falla-modulo-pulso 1.1s infinite alternate ease-in-out;
+}
+
+@keyframes falla-modulo-pulso {
+  from {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+  }
+  to {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(239, 68, 68, 0.65);
+  }
+}
+
 .etiqueta-modulo {
   display: inline-flex;
   align-items: center;
@@ -1457,14 +1549,14 @@ body {
 
 /* Contador de tormenta más grande */
 .hud-tormenta {
-  gap: 14px;
-  padding: 16px 30px;
-  font-size: 22px;
-  border-width: 3px;
+  gap: 12px;
+  padding: 13px 22px;
+  font-size: 17px;
+  border-width: 2.5px;
 }
-.hud-tormenta__icono svg { width: 30px; height: 30px; }
-.hud-tormenta__contenido { gap: 8px; }
-.hud-tormenta__pista { height: 8px; }
+.hud-tormenta__icono svg { width: 24px; height: 24px; }
+.hud-tormenta__contenido { gap: 6px; }
+.hud-tormenta__pista { height: 7px; }
 
 /* Diálogo de NPC: centrado, más grande, con el fondo oscurecido */
 .dialogo {
@@ -1515,8 +1607,26 @@ body {
     padding: 10px 20px;
     font-size: 16px;
   }
-  .hud-tormenta { font-size: 16px; padding: 10px 18px; }
-  .hud-tormenta__icono svg { width: 22px; height: 22px; }
+  .hud-tormenta {
+    width: 250px;
+    min-width: 250px;
+    max-width: 250px;
+    font-size: 14px;
+    padding: 9px 14px;
+  }
+  .hud-tormenta__icono svg { width: 20px; height: 20px; }
+  .hud-chip {
+    width: 110px;
+    min-width: 110px;
+    max-width: 110px;
+    flex: 0 0 110px;
+  }
+  .hud-chip__info {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+    flex: 0 0 72px;
+  }
   .dialogo { inset: 0; padding: 12px; }
   .dialogo__tarjeta { flex-direction: column; gap: 12px; padding: 22px 18px; text-align: center; }
   .dialogo__encabezado { justify-content: center; }
@@ -1529,25 +1639,35 @@ body {
   .dialogo, .dialogo__tarjeta { animation: none; }
 }
 
-/* Contador de tormenta centrado debajo de los recursos: más visible y sin tapar el Blindaje */
+/* Contador de tormenta arriba a la derecha */
 @media (min-width: 641px) {
-  .hud-centro { left: 50%; }
+  .hud-centro { left: 39%; }
   .hud-derecha-arriba {
-    top: 110px;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
+    top: 18px;
+    right: 22px;
+    left: auto;
+    transform: none;
   }
-  .aviso-tripulacion { top: 210px; }
+  .hud-menu-lateral { top: 104px; }
+  .hud-panel-lateral { top: 104px; }
+  .aviso-tripulacion { top: 112px; }
 }
 
-/* Pantallas medianas: el bloque central baja una fila para no chocar con el botón Menú */
+/* Pantallas medianas: el bloque central baja una fila para no chocar con el botón Menú ni con Tormenta */
 @media (min-width: 641px) and (max-width: 1200px) {
-  .hud-centro { top: 84px; }
-  .hud-derecha-arriba { top: 176px; }
-  .hud-menu-lateral { top: 180px; }
-  .hud-panel-lateral { top: 180px; }
-  .aviso-tripulacion { top: 270px; }
+  .hud-centro {
+    top: 86px;
+    left: 42%;
+  }
+  .hud-derecha-arriba {
+    top: 18px;
+    right: 22px;
+    left: auto;
+    transform: none;
+  }
+  .hud-menu-lateral { top: 168px; }
+  .hud-panel-lateral { top: 168px; }
+  .aviso-tripulacion { top: 180px; }
 }
 
 /* Celular: el bloque de Día + recursos centrado y en dos filas si no cabe */
