@@ -8,6 +8,8 @@
   background: rgba(249, 200, 70, 0.18);
   color: inherit;
   font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
   text-decoration: underline dotted 2px;
   text-decoration-color: #f2853a;
   text-underline-offset: 3px;

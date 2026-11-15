@@ -1683,3 +1683,27 @@ body {
   /* Con el botón Menú más grande, los botones laterales empiezan a su derecha */
   .hud-menu-lateral { left: 146px; }
 }
+
+/* Panel de módulo bloqueado durante la alerta y la tormenta */
+.panel-modulo--bloqueado .panel-modulo__controles { opacity: 0.45; filter: grayscale(0.6); }
+.panel-modulo--bloqueado .panel-modulo__btn { cursor: not-allowed; }
+.panel-modulo__bloqueo {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(204, 41, 36, 0.12);
+  border: 2px solid rgba(204, 41, 36, 0.45);
+  color: #7f1d1d;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+/* El bloque Día + recursos (~820 px) no cabe en la misma fila que el botón Menú
+   y el contador de tormenta por debajo de ~1600 px: baja a una segunda fila, centrado. */
+@media (min-width: 641px) and (max-width: 1599px) {
+  .hud-centro {
+    top: 104px;
+    left: 50%;
+  }
+}

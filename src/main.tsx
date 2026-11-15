@@ -12,6 +12,7 @@ import { montarReporte } from './ui/reporte';
 import { montarGlosario } from './ui/glosario';
 import { montarGuia } from './ui/guia';
 import { montarAvisos } from './ui/avisos';
+import { montarAlertaAdelanto } from './ui/alertaAdelanto';
 
 const escena = createRoot(document.getElementById('juego')!);
 function renderizarEscena(pausada: boolean) {
@@ -55,6 +56,7 @@ montarGlosario(interfaz);
 montarHud(interfaz, controlFuentes);
 montarGuia(interfaz);
 montarAvisos(interfaz);
+montarAlertaAdelanto(interfaz);
 montarInicio(interfaz, controlFuentes);
 montarReporte(interfaz);
 

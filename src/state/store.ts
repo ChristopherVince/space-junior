@@ -146,6 +146,9 @@ export function reducer(estado: GameState, accion: Action): GameState {
 
     case 'ASIGNAR_ENERGIA': {
       if (estado.fase === 'reporte') return estado;
+      // Durante la alerta y la tormenta todos están en el refugio: nadie puede
+      // ir a los módulos a cambiar la energía.
+      if (estado.fase === 'refugio' || estado.fase === 'tormenta') return estado;
       if (estado.tareaPendiente?.modulo === accion.modulo &&
           estado.tripulacion.comandante.modulo !== accion.modulo &&
           accion.unidades > energiaEn(estado, accion.modulo)) return estado;
