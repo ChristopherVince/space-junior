@@ -30,5 +30,16 @@
   "modulo.energia": "Energía",
   "modulo.refugio": "Refugio",
   "modulo.comunicaciones": "Comunicaciones",
-  "modulo.enfermeria": "Enfermería"
+  "modulo.enfermeria": "Enfermería",
+  "panelModulo.subtitulo": "Módulo de la base",
+  "panelModulo.desc.invernadero": "El invernadero da comida y oxígeno a la tripulación.",
+  "panelModulo.desc.energia": "Los paneles solares cargan el blindaje del refugio.",
+  "panelModulo.desc.refugio": "Protege a la tripulación durante la tormenta solar.",
+  "panelModulo.desc.comunicaciones": "Vigila el Sol para dar alerta temprana antes de la tormenta.",
+  "panelModulo.desc.enfermeria": "Atiende a la tripulación y vigila su dosis de radiación.",
+  "panelModulo.energiaModulo": "Energía asignada",
+  "panelModulo.disponible": "Disponible hoy: {unidades}",
+  "panelModulo.quitar": "Quitar energía",
+  "panelModulo.dar": "Dar energía",
+  "panelModulo.sinEnergia": "No queda energía hoy"
 }

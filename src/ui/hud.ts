@@ -4,6 +4,7 @@ import balance from '../data/balance.json';
 import { t } from '../i18n';
 import { store } from '../state/store';
 import type { GameState } from '../state/types';
+import { montarPanelModulo } from './panelModulo';
 
 const UMBRAL_BAJO = 30;
 
@@ -102,6 +103,7 @@ export function montarHud(raiz: HTMLElement) {
   dialogo.className = 'dialogo';
   dialogo.hidden = true;
   raiz.append(hud, dialogo);
+  montarPanelModulo(raiz);
 
   const pintar = (e: GameState) => {
     const pctEn = Math.round((e.recursos.energia / balance.energiaPorSol) * 100);
