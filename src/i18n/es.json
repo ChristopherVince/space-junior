@@ -193,5 +193,15 @@
   "contexto.punto1": "Camina por la base y entra a los módulos para activarlos.",
   "contexto.punto2": "Reparte tus 10 rayos de energía entre oxígeno, escudo y salud.",
   "contexto.punto3": "Cuando se acerque la tormenta, ¡corre con tu equipo al Refugio!",
-  "contexto.boton": "¡Entendido, a jugar!"
+  "contexto.boton": "¡Entendido, a jugar!",
+  "hud.fallas.titulo": "⚠ Fallas durante la tormenta",
+  "hud.fallas.sistemasDetenidos": "Invernadero y paneles solares apagados por la tormenta",
+  "hud.fallas.sinComunicaciones": "⚠ Sin energía: no hubo alerta temprana",
+  "hud.fallas.blindajeBajo": "⚠ Blindaje bajo ({pct}%): entra radiación",
+  "hud.fallas.energiaBlindaje": "⚠ Faltó energía aquí: escudo en {pct}%",
+  "hud.fallas.panelesApagados": "⚡ Paneles detenidos por la tormenta",
+  "hud.fallas.invernaderoDescuidado": "⚠ Poca energía en plantas: baja el oxígeno",
+  "hud.fallas.invernaderoPausado": "⚡ Plantas en pausa por la tormenta",
+  "hud.fallas.fueraRefugio": "⚠ ¡Astronauta fuera del refugio!",
+  "hud.fallas.soporteBajo": "⚠ Faltó energía aquí: soporte vital en {pct}%"
 }

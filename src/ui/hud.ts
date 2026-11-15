@@ -78,57 +78,57 @@ const ICONO_TRIPULACION = `<svg viewBox="0 0 24 24" width="22" height="22" fill=
 const ICONO_REGISTRO = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
 const ICONO_PAUSA = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`;
 
-function chip(clase: 'energia' | 'soporte' | 'blindaje', labelKey: string, pct: number): string {
-  const bajo = pct < UMBRAL_BAJO;
-  return `
-    <div class="hud-chip ${bajo ? 'hud-chip--bajo' : ''}" title="${t(labelKey)}: ${pct}%">
-      <span class="hud-chip__icono" aria-hidden="true">${ICONOS_RECURSO[clase]}</span>
-      <div class="hud-chip__info">
-        <div class="hud-chip__fila-texto">
-          <span class="hud-chip__nombre">${t(labelKey)}</span>
-          <span class="hud-chip__pct">${pct}%</span>
-          ${bajo ? `<span class="hud-chip__bajo">${t('hud.bajo')}</span>` : ''}
-        </div>
-        <div class="hud-chip__pista" role="progressbar" aria-label="${t(labelKey)}" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
-          <div class="hud-chip__relleno hud-chip__relleno--${clase} ${bajo ? 'hud-chip__relleno--bajo' : ''}"
-               style="width:${pct}%"></div>
-        </div>
-      </div>
-    </div>`;
+type ClaseRecurso = 'energia' | 'soporte' | 'blindaje';
+
+interface ChipRefs {
+  raiz: HTMLDivElement;
+  nombre: HTMLSpanElement;
+  pct: HTMLSpanElement;
+  bajo: HTMLSpanElement;
+  pista: HTMLDivElement;
+  relleno: HTMLDivElement;
 }
 
-function avisoTormenta(e: GameState): string {
-  const p = e.pronostico;
-  if (!p) return '';
-  if (e.fase === 'tormenta') {
-    return `
-      <div class="hud-tormenta hud-tormenta--activa">
-        <span class="hud-tormenta__icono" aria-hidden="true">${ICONO_CAPAS}</span>
-        <span>${t('hud.tormentaActiva')}</span>
-      </div>`;
-  }
-  if (e.fase === 'refugio') {
-    return `
-      <div class="hud-tormenta hud-tormenta--refugio">
-        <span class="hud-tormenta__icono" aria-hidden="true">${ICONO_CAPAS}</span>
-        <span>${t('hud.refugio')}</span>
-      </div>`;
-  }
-
-  const restantes = Math.max(0, Number((p.horasPronosticadas - e.hora).toFixed(1)));
-  const margen = Number(p.margenHoras.toFixed(0));
-  const franjaPct = Math.min(100, Math.max(0, ((p.horasPronosticadas - e.hora) / p.horasPronosticadas) * 100));
-
-  return `
-    <div class="hud-tormenta hud-tormenta--aviso">
-      <span class="hud-tormenta__icono" aria-hidden="true">${ICONO_CAPAS}</span>
-      <div class="hud-tormenta__contenido">
-        <span class="hud-tormenta__texto">${t('hud.tormenta', { horas: restantes, margen })}</span>
-        <div class="hud-tormenta__pista">
-          <div class="hud-tormenta__franja" style="width:${franjaPct}%"></div>
-        </div>
+function crearChipDom(clase: ClaseRecurso): ChipRefs {
+  const raiz = document.createElement('div');
+  raiz.className = 'hud-chip';
+  raiz.innerHTML = `
+    <span class="hud-chip__icono" aria-hidden="true">${ICONOS_RECURSO[clase]}</span>
+    <div class="hud-chip__info">
+      <div class="hud-chip__fila-texto">
+        <span class="hud-chip__nombre"></span>
+        <span class="hud-chip__derecha">
+          <span class="hud-chip__bajo" hidden></span>
+          <span class="hud-chip__pct"></span>
+        </span>
+      </div>
+      <div class="hud-chip__pista" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+        <div class="hud-chip__relleno hud-chip__relleno--${clase}"></div>
       </div>
     </div>`;
+  return {
+    raiz,
+    nombre: raiz.querySelector('.hud-chip__nombre') as HTMLSpanElement,
+    pct: raiz.querySelector('.hud-chip__pct') as HTMLSpanElement,
+    bajo: raiz.querySelector('.hud-chip__bajo') as HTMLSpanElement,
+    pista: raiz.querySelector('.hud-chip__pista') as HTMLDivElement,
+    relleno: raiz.querySelector('.hud-chip__relleno') as HTMLDivElement,
+  };
+}
+
+function actualizarChipDom(refs: ChipRefs, labelKey: string, pct: number) {
+  const bajo = pct < UMBRAL_BAJO;
+  const etiqueta = t(labelKey);
+  refs.raiz.classList.toggle('hud-chip--bajo', bajo);
+  refs.raiz.title = `${etiqueta}: ${pct}%`;
+  refs.nombre.textContent = etiqueta;
+  refs.pct.textContent = `${pct}%`;
+  refs.bajo.textContent = t('hud.bajo');
+  refs.bajo.hidden = !bajo;
+  refs.pista.setAttribute('aria-label', etiqueta);
+  refs.pista.setAttribute('aria-valuenow', String(pct));
+  refs.relleno.classList.toggle('hud-chip__relleno--bajo', bajo);
+  refs.relleno.style.width = `${pct}%`;
 }
 
 function renderizarContenidoPanel(panel: PanelLateralId, e: GameState): { titulo: string; cuerpo: string } {
@@ -208,6 +208,38 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
 
   const hudEstado = document.createElement('div');
   hudEstado.className = 'hud-estado';
+  hudEstado.innerHTML = `
+    <div class="hud-centro">
+      <div class="hud-dia">
+        <span class="hud-dia__estrella" aria-hidden="true">✦</span>
+        <span class="hud-dia__texto"></span>
+      </div>
+      <div class="hud-capsula"></div>
+    </div>
+    <div class="hud-derecha-arriba">
+      <div class="hud-tormenta hud-tormenta--aviso" hidden>
+        <span class="hud-tormenta__icono" aria-hidden="true">${ICONO_CAPAS}</span>
+        <div class="hud-tormenta__contenido">
+          <span class="hud-tormenta__texto"></span>
+          <div class="hud-tormenta__pista">
+            <div class="hud-tormenta__franja"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const elDiaTexto = hudEstado.querySelector('.hud-dia__texto') as HTMLSpanElement;
+  const elCapsula = hudEstado.querySelector('.hud-capsula') as HTMLDivElement;
+  const chipEnergia = crearChipDom('energia');
+  const chipSoporte = crearChipDom('soporte');
+  const chipBlindaje = crearChipDom('blindaje');
+  elCapsula.append(chipEnergia.raiz, chipSoporte.raiz, chipBlindaje.raiz);
+
+  const elTormenta = hudEstado.querySelector('.hud-tormenta') as HTMLDivElement;
+  const elTormentaTexto = hudEstado.querySelector('.hud-tormenta__texto') as HTMLSpanElement;
+  const elTormentaPista = hudEstado.querySelector('.hud-tormenta__pista') as HTMLDivElement;
+  const elTormentaFranja = hudEstado.querySelector('.hud-tormenta__franja') as HTMLDivElement;
 
   const btnPausa = document.createElement('button');
   btnPausa.type = 'button';
@@ -433,22 +465,38 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
     const pctSV = Math.round(e.recursos.soporteVital);
     const pctBl = Math.round(e.recursos.blindaje);
 
-    hudEstado.innerHTML = `
-      <div class="hud-centro">
-        <div class="hud-dia">
-          <span class="hud-dia__estrella" aria-hidden="true">✦</span>
-          <span>${t('hud.dia')} ${e.sol} (${t('glosario.etiquetaSol')})</span>
-        </div>
-        <div class="hud-capsula">
-          ${chip('energia',  'hud.energia',      pctEn)}
-          ${chip('soporte',  'hud.soporteVital', pctSV)}
-          ${chip('blindaje', 'hud.blindaje',     pctBl)}
-        </div>
-      </div>
-      <div class="hud-derecha-arriba">
-        ${avisoTormenta(e)}
-      </div>
-    `;
+    elDiaTexto.textContent = `${t('hud.dia')} ${e.sol} (${t('glosario.etiquetaSol')})`;
+    actualizarChipDom(chipEnergia, 'hud.energia', pctEn);
+    actualizarChipDom(chipSoporte, 'hud.soporteVital', pctSV);
+    actualizarChipDom(chipBlindaje, 'hud.blindaje', pctBl);
+
+    const p = e.pronostico;
+    if (!p) {
+      elTormenta.hidden = true;
+    } else {
+      elTormenta.hidden = false;
+      elTormenta.classList.toggle('hud-tormenta--activa', e.fase === 'tormenta');
+      elTormenta.classList.toggle('hud-tormenta--refugio', e.fase === 'refugio');
+      elTormenta.classList.toggle('hud-tormenta--aviso', e.fase !== 'tormenta' && e.fase !== 'refugio');
+
+      if (e.fase === 'tormenta') {
+        elTormentaTexto.textContent = t('hud.tormentaActiva');
+        elTormentaPista.hidden = true;
+      } else if (e.fase === 'refugio') {
+        elTormentaTexto.textContent = t('hud.refugio');
+        elTormentaPista.hidden = true;
+      } else {
+        const restantes = Math.max(0, Math.round(p.horasPronosticadas - e.hora));
+        const margen = Math.round(p.margenHoras);
+        const franjaPct = Math.min(
+          100,
+          Math.max(0, ((p.horasPronosticadas - e.hora) / p.horasPronosticadas) * 100),
+        );
+        elTormentaTexto.textContent = t('hud.tormenta', { horas: restantes, margen });
+        elTormentaPista.hidden = false;
+        elTormentaFranja.style.width = `${franjaPct}%`;
+      }
+    }
 
     if (idiomaCambio || panelActivo !== ultimoPanelPintado) {
       pintarMenuLateral();

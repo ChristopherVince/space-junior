@@ -1,6 +1,6 @@
 // Frente 3 · Panel de energía al entrar a un módulo (#12).
 // Se muestra cuando el comandante entra a cualquier módulo distinto del pasillo central.
-import { t } from '../i18n';
+import { getIdioma, t } from '../i18n';
 import { store } from '../state/store';
 import type { GameState, ModuleId } from '../state/types';
 
@@ -22,6 +22,7 @@ export function montarPanelModulo(raiz: HTMLElement) {
 
   let avisoSinEnergiaForzado = false;
   let ultimoModulo: ModuleId = store.getState().tripulacion.comandante.modulo;
+  let ultimaClaveRender = '';
 
   const pintar = (e: GameState) => {
     const modulo = e.tripulacion.comandante.modulo;
@@ -34,6 +35,7 @@ export function montarPanelModulo(raiz: HTMLElement) {
     // El pasillo central no tiene panel; tampoco se muestra en la portada ni en el reporte final.
     if (modulo === 'pasillo' || e.fase === 'reporte' || e.fase === 'aviso') {
       panel.hidden = true;
+      ultimaClaveRender = '';
       return;
     }
 
@@ -41,6 +43,9 @@ export function montarPanelModulo(raiz: HTMLElement) {
     const actual = e.energiaAsignada[modulo] ?? 0;
     const libre = e.recursos.energia;
     const sinEnergia = libre <= 0;
+    const claveRender = `${getIdioma()}:${modulo}:${actual}:${libre}:${avisoSinEnergiaForzado ? 1 : 0}`;
+    if (claveRender === ultimaClaveRender) return;
+    ultimaClaveRender = claveRender;
 
     panel.innerHTML = `
       <div class="panel-modulo__cabecera">

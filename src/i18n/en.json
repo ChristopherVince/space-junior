@@ -193,5 +193,15 @@
   "contexto.punto1": "Walk around the base and enter modules to power them up.",
   "contexto.punto2": "Share your 10 power bolts between oxygen, shield, and health.",
   "contexto.punto3": "When the storm gets close, run with your crew to the Shelter!",
-  "contexto.boton": "Got it, let's play!"
+  "contexto.boton": "Got it, let's play!",
+  "hud.fallas.titulo": "⚠ Failures during the storm",
+  "hud.fallas.sistemasDetenidos": "Greenhouse and solar panels shut down by the storm",
+  "hud.fallas.sinComunicaciones": "⚠ No power: early warning failed",
+  "hud.fallas.blindajeBajo": "⚠ Low shielding ({pct}%): radiation enters",
+  "hud.fallas.energiaBlindaje": "⚠ Lacked power here: shield at {pct}%",
+  "hud.fallas.panelesApagados": "⚡ Panels stopped by the storm",
+  "hud.fallas.invernaderoDescuidado": "⚠ Low plant power: oxygen dropping",
+  "hud.fallas.invernaderoPausado": "⚡ Plants paused by the storm",
+  "hud.fallas.fueraRefugio": "⚠ Astronaut outside the shelter!",
+  "hud.fallas.soporteBajo": "⚠ Lacked power here: life support at {pct}%"
 }

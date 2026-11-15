@@ -29,13 +29,18 @@ export function eventoAlAzar(): Evento {
 export function iniciarPartida(evento: Evento = eventoAlAzar()) {
   ultimoId = evento.id;
   reiniciarBots();
+  const horasPronosticadas = Math.max(8, Math.round(evento.horasPronosticadas));
+  const margenHoras = Math.min(7, Math.max(1, Math.round(evento.margenHoras || 7)));
+  // La tormenta se activa de forma aleatoria entre 7 y 0 horas antes de que el contador llegue a 0.
+  const adelanto = Math.floor(Math.random() * (margenHoras + 1));
+  const horasReales = Math.max(1, horasPronosticadas - adelanto);
   store.dispatch({
     type: 'INICIAR_PARTIDA',
     eventoId: evento.id,
     pronostico: {
-      horasPronosticadas: evento.horasPronosticadas,
-      margenHoras: evento.margenHoras,
-      horasReales: evento.horasReales,
+      horasPronosticadas,
+      margenHoras,
+      horasReales,
     },
   });
 }
