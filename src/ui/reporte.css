@@ -28,6 +28,13 @@
 .reporte p { margin: 8px 0; }
 .reporte-tripulacion { padding-left: 1.3em; margin: 8px 0; }
 .reporte a { color: #a9dcff; }
+.reporte-grafica { margin: 16px 0; }
+.reporte-grafica figcaption { font-weight: 700; }
+.reporte-grafica svg { width: 100%; height: auto; display: block; }
+.reporte-grafica svg text { fill: #f5f2ec; font-size: 13px; }
+.reporte-grafica-rejilla { stroke: #64768a; stroke-width: 0.6; }
+.reporte-grafica-linea { fill: none; stroke: #f5a658; stroke-width: 2.5; stroke-linejoin: round; }
+.reporte-grafica p { font-size: 0.85rem; }
 .reporte button {
   margin-top: 10px;
   padding: 10px 18px;

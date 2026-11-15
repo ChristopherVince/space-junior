@@ -1,10 +1,11 @@
 import eventos from '../data/events.json';
+import curiosityDatos from '../data/curiosity_mayo2024.json';
 import { getIdioma, t } from '../i18n';
 import { store } from '../state/store';
 import type { CrewId, GameState } from '../state/types';
 import './reporte.css';
 
-const FUENTE_CURIOSITY = 'https://www.jpl.nasa.gov/news/nasa-watches-mars-light-up-during-epic-solar-storm/';
+const FUENTE_CURIOSITY = curiosityDatos.fuente;
 const TRIPULACION: CrewId[] = ['comandante', 'ingeniero', 'medico', 'cientifico'];
 
 function texto(tag: string, contenido: string, clase?: string): HTMLElement {
@@ -31,6 +32,53 @@ function enlace(url: string, etiqueta: string): HTMLAnchorElement | null {
 
 function numero(valor: number): string {
   return new Intl.NumberFormat(getIdioma(), { maximumFractionDigits: 2 }).format(valor);
+}
+
+function graficaCuriosity(): HTMLElement {
+  const figura = document.createElement('figure');
+  figura.className = 'reporte-grafica';
+  const leyenda = document.createElement('figcaption');
+  leyenda.textContent = t('reporte.graficaTitulo');
+  figura.append(leyenda);
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 640 210');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', t('reporte.graficaAccesible'));
+  const datos = curiosityDatos.curvaHoraria;
+  const maximo = Math.max(...datos.map((p) => p.tasaMicrograyPorHora ?? 0), 1);
+  const limite = Math.ceil(maximo / 50) * 50;
+  const y = (valor: number) => 165 - valor / limite * 140;
+  for (let tick = 0; tick <= limite; tick += 50) {
+    const linea = document.createElementNS(ns, 'line');
+    linea.setAttribute('x1', '50'); linea.setAttribute('x2', '625');
+    linea.setAttribute('y1', String(y(tick))); linea.setAttribute('y2', String(y(tick)));
+    linea.setAttribute('class', 'reporte-grafica-rejilla'); svg.append(linea);
+    const etiqueta = document.createElementNS(ns, 'text');
+    etiqueta.setAttribute('x', '44'); etiqueta.setAttribute('y', String(y(tick) + 4));
+    etiqueta.setAttribute('text-anchor', 'end'); etiqueta.textContent = numero(tick); svg.append(etiqueta);
+  }
+  let segmento: string[] = [];
+  function cerrarSegmento() {
+    if (!segmento.length) return;
+    const trazo = document.createElementNS(ns, 'polyline');
+    trazo.setAttribute('points', segmento.join(' '));
+    trazo.setAttribute('class', 'reporte-grafica-linea');
+    svg.append(trazo); segmento = [];
+  }
+  datos.forEach((p, indice) => {
+    if (p.tasaMicrograyPorHora === null) { cerrarSegmento(); return; }
+    segmento.push(`${50 + indice / (datos.length - 1) * 575},${y(p.tasaMicrograyPorHora)}`);
+  });
+  cerrarSegmento();
+  [19, 20, 21, 22].forEach((dia, indice) => {
+    const etiqueta = document.createElementNS(ns, 'text');
+    etiqueta.setAttribute('x', String(50 + indice * 24 / (datos.length - 1) * 575));
+    etiqueta.setAttribute('y', '187'); etiqueta.setAttribute('text-anchor', 'middle');
+    etiqueta.textContent = `${dia}/05`; svg.append(etiqueta);
+  });
+  figura.append(svg, texto('p', t('reporte.graficaNota')));
+  return figura;
 }
 
 export function montarReporte(raiz: HTMLElement): () => void {
@@ -65,10 +113,10 @@ export function montarReporte(raiz: HTMLElement): () => void {
       lista.append(texto('li', t('reporte.dosisTripulante', {
         rol: t(`reporte.rol.${id}`),
         dosis: typeof dosis === 'number' && Number.isFinite(dosis) && dosis >= 0 ? numero(dosis) : t('reporte.desconocido'),
-        referencia: numero(8100),
+        referencia: numero(curiosityDatos.evento.dosisTotalMicrogray),
       })));
     }
-    panel.append(lista, texto('p', t('reporte.curiosity')));
+    panel.append(lista, texto('p', t('reporte.curiosity')), graficaCuriosity());
 
     const evento = eventos.eventos.find((item) => item.id === estado.eventoId);
     if (evento && evento.esEjemplo === false && Number.isFinite(evento.horasPronosticadas) && Number.isFinite(evento.horasReales)) {

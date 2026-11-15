@@ -50,7 +50,7 @@ Este es el repositorio oficial de la entrega, creado el 14 de noviembre de 2026 
 ## 4. Concepto del Juego y Reglas de Dominio
 
 - El jugador es el **comandante** de una base hipotética en Marte, con una tripulación de 4 (inspirada en la misión CHAPEA de NASA).
-- Llega una **tormenta solar real** (mayo de 2024; Curiosity midió ~8,100 microgray en la superficie, equivalente a ~30 radiografías de tórax; un día normal ronda 700 µGy).
+- Se usa como referencia la radiación medida por Curiosity en mayo de 2024: RadLab registra un fondo medio de ~4,115 µGy/h (muestras del 15 al 19 de mayo) y ~1.645 µGy integrados en la ventana analítica del 20 de mayo 05:38:56 al 21 de mayo 13:04:44. Estos límites son una elección de análisis, no el comienzo y fin oficiales de la tormenta. Los eventos del Scoreboard se observaron cerca de la Tierra y no son mediciones de llegada a Marte.
 - El aviso de la tormenta trae **margen de error real** (CME Scoreboard de CCMC: pronósticos que se desviaron por 17 y 43 horas). El dilema central es cuándo activar el blindaje y refugiar a la tripulación.
 - Frase de pitch: *"NASA's forecast was wrong by 17 hours. Would you have kept your crew safe?"*
 - Honestidad científica: la tormenta es real, la tripulación es hipotética.

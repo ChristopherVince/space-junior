@@ -2,8 +2,9 @@
   "_nota": "Valores de juego simplificados, no mediciones de NASA, salvo los marcados en _fuentes. Se ajustan desde la hoja de balance.",
   "_fuentes": {
     "horasPorSol": "Un sol marciano dura 24 h 39 min (NASA).",
-    "dosisBasePorHora": "~700 microgray por sol en la superficie de Marte, repartidos por hora (Curiosity RAD, nota de NASA de 2024).",
-    "dosisFueraPorHora": "Calibrado para que 24 h de tormenta fuera del refugio sumen ~8,100 microgray, lo que midió Curiosity en mayo de 2024."
+    "dosisBasePorHora": "Promedio RadLab de muestras disponibles del 15 al 19 de mayo de 2024: 4,115 µGy/h. Ver curiosity_mayo2024.json.",
+    "dosisFueraPorHora": "Exceso medio aproximado sobre el fondo durante la ventana elegida de RadLab; tasa constante para el juego, no pico observado.",
+    "duracionTormentaHoras": "Ventana de análisis elegida de RadLab: 31,43 h; el reloj del juego avanza en horas enteras."
   },
   "energiaPorSol": 10,
   "horasPorSol": 24.65,
@@ -13,8 +14,8 @@
   "invernaderoPorUnidadHora": 0.4,
   "blindajePorUnidadHora": 0.35,
   "horasAlertaComunicaciones": 6,
-  "duracionTormentaHoras": 24,
-  "dosisBasePorHora": 28,
-  "dosisFueraPorHora": 340,
+  "duracionTormentaHoras": 31.43,
+  "dosisBasePorHora": 4.115,
+  "dosisFueraPorHora": 48.215,
   "proteccionMaximaRefugio": 0.9
 }
