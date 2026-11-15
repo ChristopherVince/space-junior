@@ -112,12 +112,11 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
       const objetivo = rutaRef.current[0];
       const diffX = objetivo.x - pos.current.x;
       const diffZ = objetivo.z - pos.current.z;
-      if (Math.hypot(diffX, diffZ) < 0.14) {
+      if (Math.hypot(diffX, diffZ) < 0.0001) {
         rutaRef.current.shift();
         if (
           rutaRef.current.length === 0 &&
-          bloqueadoEnRefugioRef.current &&
-          store.getState().tripulacion.comandante.modulo !== 'refugio'
+          bloqueadoEnRefugioRef.current
         ) {
           store.dispatch({ type: 'MOVER_TRIPULANTE', quien: 'comandante', modulo: 'refugio' });
         }
@@ -132,8 +131,9 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
 
     if (enMovimiento) {
       const len = Math.hypot(dx, dz);
-      const vx = (dx / len) * VELOCIDAD * dt;
-      const vz = (dz / len) * VELOCIDAD * dt;
+      const paso = usaTeclado ? VELOCIDAD * dt : Math.min(VELOCIDAD * dt, len);
+      const vx = (dx / len) * paso;
+      const vz = (dz / len) * paso;
       const siguiente = resolverMovimientoConMuros(pos.current.x, pos.current.z, vx, vz, RADIO_JUGADOR);
       pos.current.x = siguiente.x;
       pos.current.z = siguiente.z;

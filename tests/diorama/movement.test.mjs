@@ -7,11 +7,55 @@ test('expone un resolvedor compartido para cualquier fuente de movimiento', () =
   assert.equal(typeof collision.resolverMovimientoConMuros, 'function');
 });
 
+test('todas las posiciones libres tienen rutas seguras a cada módulo', () => {
+  const destinos = ['refugio', 'invernadero', 'pasillo', 'energia', 'comunicaciones', 'enfermeria'];
+  for (let x = -9.39; x <= 9.39; x += 0.19) {
+    for (let z = -4.39; z <= 4.39; z += 0.19) {
+      if (collision.colisionaConMuros(x, z, 0.26)) continue;
+      for (const destino of destinos) {
+        const ruta = rutas.calcularRutaFija(x, z, destino);
+        assert.ok(ruta.length, `sin ruta desde ${x},${z}`);
+        let anterior = { x, z };
+        for (const punto of ruta) {
+          assert.ok(collision.segmentoTransitable(anterior, punto), `segmento bloqueado ${JSON.stringify({ anterior, punto, destino })}`);
+          anterior = punto;
+        }
+      }
+    }
+  }
+});
+
 test('bloquea el avance frontal contra un muro', () => {
   assert.deepEqual(
     collision.resolverMovimientoConMuros(-8.1, -0.5, 0, 0.3, 0.26),
     { x: -8.1, z: -0.5 },
   );
+});
+
+test('un desplazamiento grande no salta paredes', () => {
+  const p = collision.resolverMovimientoConMuros(-8.1, -0.7, 0, 2, 0.26);
+  assert.ok(p.z < -0.3);
+  assert.equal(collision.colisionaConMuros(p.x, p.z, 0.26), false);
+});
+
+test('el movimiento por ejes completa las rutas al refugio desde todo el mapa', () => {
+  for (let x = -9.3; x < 9.3; x += 0.6) {
+    for (let z = -4.3; z < 4.3; z += 0.6) {
+      if (collision.colisionaConMuros(x, z, 0.26)) continue;
+      let pos = { x, z };
+      for (const destino of rutas.calcularRutaAlRefugio('comandante', x, z)) {
+        let pasos = 0;
+        while (Math.hypot(destino.x - pos.x, destino.z - pos.z) > 0.0001 && pasos++ < 1000) {
+          const dx = destino.x - pos.x, dz = destino.z - pos.z;
+          const distancia = Math.hypot(dx, dz), paso = Math.min(0.07, distancia);
+          pos = collision.resolverMovimientoConMuros(pos.x, pos.z, dx / distancia * paso, dz / distancia * paso, 0.26);
+          assert.equal(collision.colisionaConMuros(pos.x, pos.z, 0.26), false);
+        }
+        assert.ok(pasos < 1000, `atasco desde ${x},${z} hacia ${JSON.stringify(destino)}`);
+      }
+      assert.ok(Math.hypot(pos.x + 8.7, pos.z + 0.7) < 0.001);
+    }
+  }
 });
 
 test('permite deslizarse por el eje libre al chocar en diagonal', () => {

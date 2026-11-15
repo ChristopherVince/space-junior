@@ -85,9 +85,9 @@ export function CrewController() {
         const rz = objetivo.z - st.z;
         const dist = Math.hypot(rx, rz);
 
-        if (dist < 0.12) {
+        if (dist < 0.0001) {
           st.ruta.shift();
-          if (st.ruta.length === 0 && store.getState().tripulacion[b.id].modulo !== st.destino) {
+          if (st.ruta.length === 0) {
             store.dispatch({ type: 'MOVER_TRIPULANTE', quien: b.id, modulo: st.destino });
           }
         } else {

@@ -3,6 +3,7 @@ import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { store } from '../../state/store';
+import { t } from '../../i18n';
 import type { ModuleId, Phase } from '../../state/types';
 import { AstronautController, type DestinoTactil } from './AstronautController';
 import { CrewController } from './CrewController';
@@ -162,8 +163,8 @@ export function MarsDioramaScene() {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.textContent = id;
-      btn.title = `Vista ${id}`;
-      btn.setAttribute('aria-label', `Vista ${id}`);
+      btn.title = t('controles.vista', { numero: id });
+      btn.setAttribute('aria-label', btn.title);
       btn.style.padding = '6px 10px';
       btn.style.borderRadius = '8px';
       btn.style.border = '1px solid rgba(255,255,255,0.25)';

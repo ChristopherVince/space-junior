@@ -15,6 +15,12 @@ function reproducirBeep(ctx: AudioContext, fuerte: boolean) {
   gain.connect(ctx.destination);
   osc.start();
   osc.stop(ctx.currentTime + 0.25);
+  osc.onended = () => { osc.disconnect(); gain.disconnect(); };
+  return () => {
+    gain.gain.cancelScheduledValues(ctx.currentTime);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    osc.stop();
+  };
 }
 
 /** Efectos visuales (tinte rojo) y sonoros (alarma con botón de silencio) durante la tormenta. */
@@ -43,10 +49,12 @@ export function StormEffects() {
       if (!AudioCtx) return;
 
       if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
-      void audioCtxRef.current.resume().catch(() => {});
-      setAudioPreparado(true);
-      window.removeEventListener('pointerdown', prepararAudio);
-      window.removeEventListener('keydown', prepararAudio);
+      void audioCtxRef.current.resume().then(() => {
+        if (audioCtxRef.current?.state !== 'running') return;
+        setAudioPreparado(true);
+        window.removeEventListener('pointerdown', prepararAudio);
+        window.removeEventListener('keydown', prepararAudio);
+      }).catch(() => {});
     };
 
     window.addEventListener('pointerdown', prepararAudio);
@@ -65,12 +73,13 @@ export function StormEffects() {
     const ctx = audioCtxRef.current;
 
     const fuerte = esTormenta;
-    reproducirBeep(ctx, fuerte);
+    let detener = reproducirBeep(ctx, fuerte);
     const id = window.setInterval(() => {
-      reproducirBeep(ctx, fuerte);
+      detener();
+      detener = reproducirBeep(ctx, fuerte);
     }, fuerte ? 1100 : 1800);
 
-    return () => window.clearInterval(id);
+    return () => { window.clearInterval(id); detener(); };
   }, [audioPreparado, enAlerta, esTormenta, silenciado]);
 
   // Overlay rojo montado directo en el DOM (fuera del reconciler de R3F).
@@ -102,6 +111,11 @@ export function StormEffects() {
     sandCanvas.style.zIndex = '6';
     sandCanvas.width = window.innerWidth;
     sandCanvas.height = window.innerHeight;
+    const redimensionar = () => {
+      sandCanvas.width = window.innerWidth;
+      sandCanvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', redimensionar);
     contenedor.appendChild(sandCanvas);
 
     const ctx2d = sandCanvas.getContext('2d');
@@ -142,6 +156,7 @@ export function StormEffects() {
 
     return () => {
       if (rafId) window.cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', redimensionar);
       sandCanvas.remove();
       overlay.remove();
     };
