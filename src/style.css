@@ -42,11 +42,11 @@ body {
 .hud-centro {
   position: absolute;
   top: 18px;
-  left: 50%;
+  left: 43%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
 }
 
 /* Píldora crema "Día X" */
@@ -349,4 +349,211 @@ body {
   margin-right: 8px;
   padding: 6px 14px;
   font: inherit;
+}
+
+/* ── Panel de energía al entrar a un módulo (#12) ── */
+.panel-modulo {
+  position: absolute;
+  top: 98px;
+  left: 22px;
+  width: 296px;
+  padding: 20px 22px;
+  background: rgba(251, 238, 226, 0.96);
+  border: 2px solid rgba(255, 255, 255, 0.78);
+  border-radius: 24px;
+  box-shadow: 0 10px 28px rgba(74, 34, 18, 0.22);
+  color: #3f2417;
+  z-index: 12;
+  pointer-events: auto;
+  animation: panel-modulo-entrar 0.22s ease-out;
+}
+
+@keyframes panel-modulo-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel-modulo__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.panel-modulo__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: #f5d8c2;
+  color: #9e5840;
+  flex-shrink: 0;
+}
+
+.panel-modulo__titulos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.panel-modulo__subtitulo {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9e5840;
+}
+
+.panel-modulo__nombre {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  color: #3a2014;
+  line-height: 1.15;
+}
+
+.panel-modulo__desc {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #6b4634;
+}
+
+.panel-modulo__energia-caja {
+  padding: 12px 14px;
+  background: rgba(255, 250, 245, 0.85);
+  border: 1.5px solid rgba(196, 146, 118, 0.35);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panel-modulo__energia-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.panel-modulo__energia-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4a2c1d;
+}
+
+.panel-modulo__disponible {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8c5319;
+  background: #fce19c;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.panel-modulo__controles {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-modulo__btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: none;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.panel-modulo__btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.panel-modulo__btn--menos {
+  background: #ead1be;
+  color: #4a2c1d;
+}
+
+.panel-modulo__btn--menos:hover:not(:disabled) {
+  background: #dfc0a8;
+}
+
+.panel-modulo__btn--menos:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.panel-modulo__btn--mas {
+  background: #f5c344;
+  color: #3f2417;
+  box-shadow: 0 3px 8px rgba(180, 120, 14, 0.25);
+}
+
+.panel-modulo__btn--mas:hover {
+  background: #eab42e;
+}
+
+.panel-modulo__btn--agotado {
+  background: #d8c2b0;
+  color: #7a5a46;
+  box-shadow: none;
+}
+
+.panel-modulo__valor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 72px;
+}
+
+.panel-modulo__rayo {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.panel-modulo__numero {
+  font-size: 26px;
+  font-weight: 800;
+  color: #3a2014;
+  line-height: 1;
+}
+
+.panel-modulo__alerta {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: rgba(214, 54, 48, 0.14);
+  border: 1.5px solid #d63630;
+  border-radius: 12px;
+  color: #a8231e;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .panel-modulo {
+    top: auto;
+    bottom: 64px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    padding: 14px 16px;
+  }
 }

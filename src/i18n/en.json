@@ -30,5 +30,16 @@
   "modulo.energia": "Power",
   "modulo.refugio": "Shelter",
   "modulo.comunicaciones": "Comms",
-  "modulo.enfermeria": "Med Bay"
+  "modulo.enfermeria": "Med Bay",
+  "panelModulo.subtitulo": "Base module",
+  "panelModulo.desc.invernadero": "The greenhouse provides food and oxygen for the crew.",
+  "panelModulo.desc.energia": "Solar panels charge the shelter's radiation shielding.",
+  "panelModulo.desc.refugio": "Protects the crew during the solar storm.",
+  "panelModulo.desc.comunicaciones": "Watches the Sun to give an early warning before the storm.",
+  "panelModulo.desc.enfermeria": "Cares for the crew and tracks their radiation dose.",
+  "panelModulo.energiaModulo": "Assigned power",
+  "panelModulo.disponible": "Available today: {unidades}",
+  "panelModulo.quitar": "Remove power",
+  "panelModulo.dar": "Add power",
+  "panelModulo.sinEnergia": "No power left today"
 }
