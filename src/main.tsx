@@ -9,6 +9,8 @@ import { montarFuentes } from './ui/fuentes';
 import { montarHud } from './ui/hud';
 import { montarInicio } from './ui/inicio';
 import { montarReporte } from './ui/reporte';
+import { montarGlosario } from './ui/glosario';
+import { montarGuia } from './ui/guia';
 
 const escena = createRoot(document.getElementById('juego')!);
 function renderizarEscena(pausada: boolean) {
@@ -48,7 +50,9 @@ const controlFuentes = montarFuentes(
   },
 );
 
+montarGlosario(interfaz);
 montarHud(interfaz, controlFuentes);
+montarGuia(interfaz);
 montarInicio(interfaz, controlFuentes);
 montarReporte(interfaz);
 
