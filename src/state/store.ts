@@ -156,7 +156,12 @@ export function reducer(estado: GameState, accion: Action): GameState {
       };
 
     case 'MOSTRAR_PETICION':
-      return { ...estado, peticionActiva: { de: accion.de, textoId: accion.textoId } };
+      return {
+        ...estado,
+        peticionActiva: accion.modulo
+          ? { de: accion.de, textoId: accion.textoId, modulo: accion.modulo }
+          : { de: accion.de, textoId: accion.textoId },
+      };
 
     case 'RESOLVER_PETICION': {
       const peticion = estado.peticionActiva;
@@ -165,7 +170,7 @@ export function reducer(estado: GameState, accion: Action): GameState {
 
       // Aceptar = dar 1 unidad al módulo del bot. Si no queda energía libre,
       // se quita al módulo con más energía (siempre se descuida otra cosa).
-      const destino = MODULO_DE[peticion.de];
+      const destino = peticion.modulo ?? MODULO_DE[peticion.de];
       if (e.recursos.energia === 0) {
         const donante = (Object.keys(e.energiaAsignada) as ModuleId[])
           .filter((m) => m !== destino && energiaEn(e, m) > 0)

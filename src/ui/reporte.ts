@@ -1,13 +1,17 @@
-import eventos from '../data/events.json';
+// Pantalla final: resultado de un vistazo (estrellas), radiación de cada
+// tripulante con barras y contadores animados, comparación que un niño entienda
+// (días normales en Marte), la curva real de Curiosity y consejos según lo que hizo.
 import curiosityDatos from '../data/curiosity_mayo2024.json';
+import eventos from '../data/events.json';
 import { getIdioma, t } from '../i18n';
 import { abandonarPartida } from '../state/partida';
+import { analizarPartida, DOSIS_DIA_NORMAL, type Resultado } from '../state/resultado';
 import { store } from '../state/store';
-import type { CrewId, GameState } from '../state/types';
+import type { GameState } from '../state/types';
 import './reporte.css';
 
 const FUENTE_CURIOSITY = curiosityDatos.fuente;
-const TRIPULACION: CrewId[] = ['comandante', 'ingeniero', 'medico', 'cientifico'];
+const DURACION_ANIMACION_MS = 1400;
 
 function texto(tag: string, contenido: string, clase?: string): HTMLElement {
   const elemento = document.createElement(tag);
@@ -31,8 +35,61 @@ function enlace(url: string, etiqueta: string): HTMLAnchorElement | null {
   }
 }
 
-function numero(valor: number): string {
-  return new Intl.NumberFormat(getIdioma(), { maximumFractionDigits: 2 }).format(valor);
+function numero(valor: number, decimales = 0): string {
+  return new Intl.NumberFormat(getIdioma(), { maximumFractionDigits: decimales }).format(valor);
+}
+
+const sinMovimiento = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+/** Cuenta de 0 al valor final en un elemento (usa temporizador, no depende de que la pantalla dibuje). */
+function contar(elemento: HTMLElement, final: number, formato: (v: number) => string, retrasoMs: number) {
+  if (sinMovimiento()) { elemento.textContent = formato(final); return; }
+  elemento.textContent = formato(0);
+  const inicio = performance.now() + retrasoMs;
+  const id = window.setInterval(() => {
+    const avance = Math.min(1, Math.max(0, (performance.now() - inicio) / DURACION_ANIMACION_MS));
+    const suave = 1 - (1 - avance) ** 3;
+    elemento.textContent = formato(final * suave);
+    if (avance >= 1) window.clearInterval(id);
+  }, 40);
+}
+
+function estrellas(resultado: Resultado): HTMLElement {
+  const fila = document.createElement('div');
+  fila.className = 'reporte-estrellas';
+  fila.setAttribute('role', 'img');
+  fila.setAttribute('aria-label', t('reporte.estrellasAccesible', { n: resultado.estrellas }));
+  for (let i = 1; i <= 3; i++) {
+    const estrella = document.createElement('span');
+    estrella.className = `reporte-estrella ${i <= resultado.estrellas ? 'reporte-estrella--llena' : ''}`;
+    estrella.style.animationDelay = `${0.15 + i * 0.25}s`;
+    estrella.textContent = '★';
+    estrella.setAttribute('aria-hidden', 'true');
+    fila.append(estrella);
+  }
+  return fila;
+}
+
+function barra(etiqueta: string, dosis: number, maximo: number, detalle: string, clase: string, indice: number): HTMLElement {
+  const fila = document.createElement('div');
+  fila.className = `reporte-barra ${clase}`;
+  const cabecera = document.createElement('div');
+  cabecera.className = 'reporte-barra__cabecera';
+  const nombre = texto('span', etiqueta, 'reporte-barra__nombre');
+  const valor = texto('span', '', 'reporte-barra__valor');
+  cabecera.append(nombre, valor);
+  const pista = document.createElement('div');
+  pista.className = 'reporte-barra__pista';
+  const relleno = document.createElement('div');
+  relleno.className = 'reporte-barra__relleno';
+  const pct = maximo > 0 ? Math.min(100, (dosis / maximo) * 100) : 0;
+  const retraso = 0.9 + indice * 0.15;
+  relleno.style.transitionDelay = `${retraso}s`;
+  relleno.dataset.ancho = `${pct}%`;
+  pista.append(relleno);
+  fila.append(cabecera, pista, texto('span', detalle, 'reporte-barra__detalle'));
+  contar(valor, dosis, (v) => `${numero(v)} µGy`, retraso * 1000);
+  return fila;
 }
 
 function graficaCuriosity(): HTMLElement {
@@ -65,6 +122,8 @@ function graficaCuriosity(): HTMLElement {
     const trazo = document.createElementNS(ns, 'polyline');
     trazo.setAttribute('points', segmento.join(' '));
     trazo.setAttribute('class', 'reporte-grafica-linea');
+    // pathLength = 1 permite animar el trazo dibujándose, sin medir su longitud.
+    trazo.setAttribute('pathLength', '1');
     svg.append(trazo); segmento = [];
   }
   datos.forEach((p, indice) => {
@@ -80,6 +139,19 @@ function graficaCuriosity(): HTMLElement {
   });
   figura.append(svg, texto('p', t('reporte.graficaNota')));
   return figura;
+}
+
+function lineaPronostico(estado: GameState): HTMLElement {
+  const evento = eventos.eventos.find((item) => item.id === estado.eventoId);
+  if (!evento || evento.esEjemplo !== false || !Number.isFinite(evento.horasPronosticadas) || !Number.isFinite(evento.horasReales)) {
+    return texto('p', t('reporte.pronosticoNoDisponible'));
+  }
+  const diferencia = evento.horasReales - evento.horasPronosticadas;
+  const horas = numero(Math.abs(diferencia), 1);
+  const clave = Math.abs(diferencia) < 1
+    ? 'reporte.pronosticoExacto'
+    : diferencia < 0 ? 'reporte.pronosticoAntes' : 'reporte.pronosticoDespues';
+  return texto('p', t(clave, { horas, fecha: evento.fecha }), 'reporte-pronostico');
 }
 
 export function montarReporte(raiz: HTMLElement): () => void {
@@ -101,37 +173,56 @@ export function montarReporte(raiz: HTMLElement): () => void {
     pantalla.hidden = false;
     pantalla.replaceChildren();
 
+    const resultado = analizarPartida(estado);
     const panel = document.createElement('div');
     panel.className = 'reporte-panel';
-    const titulo = texto('h1', t(estado.motivoFin === 'sinSoporteVital' ? 'reporte.sinSoporteVital' : 'reporte.titulo'));
+    if (sinMovimiento()) panel.classList.add('reporte-panel--sin-animacion');
+
+    // 1. Resultado de un vistazo
+    const titulo = texto('h1', t(resultado.tituloClave));
     titulo.id = 'reporte-titulo';
-    panel.append(titulo, texto('p', t('reporte.dosisIntro')));
+    panel.append(estrellas(resultado), titulo);
 
-    const lista = document.createElement('ul');
-    lista.className = 'reporte-tripulacion';
-    for (const id of TRIPULACION) {
-      const dosis = estado.tripulacion[id]?.dosis;
-      lista.append(texto('li', t('reporte.dosisTripulante', {
-        rol: t(`reporte.rol.${id}`),
-        dosis: typeof dosis === 'number' && Number.isFinite(dosis) && dosis >= 0 ? numero(dosis) : t('reporte.desconocido'),
-        referencia: numero(curiosityDatos.evento.dosisTotalMicrogray),
-      })));
+    // 2. Radiación de la tripulación, animada, contra "sin refugio"
+    panel.append(texto('h2', t('reporte.tuTripulacion')));
+    const barras = document.createElement('div');
+    barras.className = 'reporte-barras';
+    const maximo = Math.max(resultado.dosisSinRefugio, ...resultado.tripulacion.map((m) => m.dosis), 1);
+    resultado.tripulacion.forEach((m, i) => {
+      const detalle = m.proteccion === null
+        ? t('reporte.dias', { dias: numero(m.diasNormales, 1) })
+        : `${t('reporte.protegido', { pct: Math.round(m.proteccion * 100) })} · ${t('reporte.dias', { dias: numero(m.diasNormales, 1) })}`;
+      barras.append(barra(t(`reporte.rol.${m.id}`), m.dosis, maximo, detalle, '', i));
+    });
+    if (resultado.horasTormenta > 0) {
+      barras.append(barra(
+        t('reporte.sinRefugio'),
+        resultado.dosisSinRefugio,
+        maximo,
+        t('reporte.dias', { dias: numero(resultado.dosisSinRefugio / DOSIS_DIA_NORMAL, 1) }),
+        'reporte-barra--referencia',
+        resultado.tripulacion.length,
+      ));
     }
-    panel.append(lista, texto('p', t('reporte.curiosity')), graficaCuriosity());
+    panel.append(barras, texto('p', t('reporte.explicaDias', { dia: numero(DOSIS_DIA_NORMAL) }), 'reporte-explica'));
 
-    const evento = eventos.eventos.find((item) => item.id === estado.eventoId);
-    if (evento && evento.esEjemplo === false && Number.isFinite(evento.horasPronosticadas) && Number.isFinite(evento.horasReales)) {
-      const error = Math.abs(evento.horasReales - evento.horasPronosticadas);
-      panel.append(texto('p', t('reporte.pronostico', { fecha: evento.fecha, horas: numero(error) })));
-    } else {
-      panel.append(texto('p', t('reporte.pronosticoNoDisponible')));
-    }
-    panel.append(texto('h2', t('reporte.proximaVez')), texto('p', t('reporte.consejo')));
+    // 3. Lo que pasó de verdad
+    panel.append(texto('h2', t('reporte.deVerdad')), lineaPronostico(estado), texto('p', t('reporte.curiosity')), graficaCuriosity());
 
+    // 4. Consejos según lo que hizo
+    panel.append(texto('h2', t('reporte.proximaVez')));
+    const consejos = document.createElement('ul');
+    consejos.className = 'reporte-consejos';
+    for (const c of resultado.consejos) consejos.append(texto('li', t(c.clave, c.vars)));
+    panel.append(consejos);
+
+    // 5. Fuentes y volver a jugar
     const fuentes = document.createElement('p');
+    fuentes.className = 'reporte-fuentes';
     fuentes.append(document.createTextNode(t('reporte.fuentes') + ' '));
     const curiosity = enlace(FUENTE_CURIOSITY, t('reporte.fuenteCuriosity'));
     if (curiosity) fuentes.append(curiosity);
+    const evento = eventos.eventos.find((item) => item.id === estado.eventoId);
     const fuenteEvento = evento && evento.esEjemplo === false ? enlace(evento.fuente, t('reporte.fuentePronostico')) : null;
     if (fuenteEvento) fuentes.append(document.createTextNode(' · '), fuenteEvento);
     panel.append(fuentes);
@@ -142,6 +233,13 @@ export function montarReporte(raiz: HTMLElement): () => void {
     boton.addEventListener('click', () => abandonarPartida());
     panel.append(boton);
     pantalla.append(panel);
+    pantalla.scrollTop = 0;
+
+    // Las barras crecen después de que el panel entra en pantalla.
+    window.setTimeout(() => {
+      panel.querySelectorAll<HTMLElement>('.reporte-barra__relleno').forEach((r) => { r.style.width = r.dataset.ancho ?? '0%'; });
+    }, 50);
+
     titulo.tabIndex = -1;
     titulo.focus();
   }

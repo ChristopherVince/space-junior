@@ -78,29 +78,27 @@ test('Issue #40: simulaciones sobre los 16 eventos reales mantienen dilema con d
   assert.ok(fallosTodoBlindaje >= 12, `Se esperaban >= 12 fallos por soporte vital sin invernadero, hubo ${fallosTodoBlindaje}`);
 });
 
-test('Issue #40: el Oficial Médico compite por energía dentro de las primeras 10 horas con escala RadLab', async () => {
+test('El Oficial Médico ya no pide energía para la Enfermería (no tiene efecto en las reglas)', async () => {
+  // Antes (#40) el médico pedía energía para la Enfermería, pero esa energía no
+  // reduce la dosis en ninguna regla: enseñaba algo falso y repetía la petición
+  // sin fin. Ahora el médico solo da avisos en la alerta y en la tormenta.
   const { store, revisarBots } = await cargarSimulador();
   store.dispatch({
     type: 'INICIAR_PARTIDA',
     eventoId: 'test-radlab',
     pronostico: { horasPronosticadas: 30, margenHoras: 7, horasReales: 24 },
   });
-  // Cubrimos invernadero y energía para que solo falte enfermería
   store.dispatch({ type: 'ASIGNAR_ENERGIA', modulo: 'invernadero', unidades: 4 });
   store.dispatch({ type: 'ASIGNAR_ENERGIA', modulo: 'energia', unidades: 4 });
 
-  let pidioMedico = false;
-  for (let h = 1; h <= 10; h++) {
+  for (let h = 1; h <= 60 && store.getState().fase !== 'reporte'; h++) {
     store.dispatch({ type: 'AVANZAR_HORAS', horas: 1 });
     revisarBots();
     const pet = store.getState().peticionActiva;
-    if (pet?.de === 'medico') {
-      pidioMedico = true;
-      break;
-    }
+    assert.notEqual(pet?.de, 'medico', 'El médico no debe pedir energía');
+    assert.notEqual(pet?.modulo, 'enfermeria', 'Ninguna petición debe ir a la Enfermería');
     if (pet) store.dispatch({ type: 'RESOLVER_PETICION', aceptada: false });
   }
-  assert.ok(pidioMedico, 'El Oficial Médico debe pedir energía en <= 10 horas con dosisBasePorHora = 4.115');
 });
 
 test('Issue #40: textos i18n y archivos de datos usan las cifras de RadLab sin valores antiguos', () => {

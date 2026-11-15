@@ -52,7 +52,8 @@ export interface GameState {
   pronostico: Forecast | null;
   eventoId: string | null; // id del evento real en src/data/events.json
   tripulacion: Record<CrewId, CrewMember>;
-  peticionActiva: { de: CrewId; textoId: string } | null;
+  // modulo: a dónde va la energía si se acepta (si falta, el módulo propio del bot).
+  peticionActiva: { de: CrewId; textoId: string; modulo?: ModuleId } | null;
   pausado: boolean; // el reloj no avanza (también se detiene solo si hay petición activa)
   horaInicioTormenta: number | null; // hora en que empezó la radiación
   motivoFin: MotivoFin | null; // por qué terminó la partida (solo en fase 'reporte')
@@ -63,7 +64,7 @@ export type Action =
   | { type: 'AVANZAR_HORAS'; horas: number }
   | { type: 'ASIGNAR_ENERGIA'; modulo: ModuleId; unidades: number }
   | { type: 'MOVER_TRIPULANTE'; quien: CrewId; modulo: ModuleId }
-  | { type: 'MOSTRAR_PETICION'; de: CrewId; textoId: string }
+  | { type: 'MOSTRAR_PETICION'; de: CrewId; textoId: string; modulo?: ModuleId }
   | { type: 'RESOLVER_PETICION'; aceptada: boolean }
   | { type: 'IR_AL_REFUGIO' }
   | { type: 'PAUSAR'; pausado: boolean }
