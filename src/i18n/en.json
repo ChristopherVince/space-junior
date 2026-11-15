@@ -29,7 +29,6 @@
   "hud.tormentaActiva": "Storm active!",
   "hud.refugio": "⚠ Take shelter!",
   "hud.menu.modulos": "Modules",
-  "hud.menu.tareas": "Tasks",
   "hud.menu.tripulacion": "Crew",
   "hud.menu.registro": "Log",
   "controles.audioActivar": "Turn sound on",
@@ -75,14 +74,6 @@
   "panelLateral.cerrar": "Close panel",
   "panelLateral.modulos.titulo": "Base modules",
   "panelLateral.modulos.energia": "Power: {unidades}",
-  "panelLateral.tareas.titulo": "Commander tasks",
-  "panelLateral.tareas.invernadero": "Give at least 3 power to the Greenhouse to produce oxygen and food.",
-  "panelLateral.tareas.blindaje": "Give power to the Power module to charge shelter shielding before the storm.",
-  "panelLateral.tareas.comunicaciones": "Power Communications with at least 1 unit to get an early warning.",
-  "panelLateral.tareas.enfermeria": "Assign power to Medbay to monitor crew radiation.",
-  "panelLateral.tareas.refugio": "The storm is coming! Lead the commander to the Shelter right away.",
-  "panelLateral.tareas.enRefugio": "Keep the crew inside the Shelter until the storm passes.",
-  "panelLateral.tareas.listo": "Key systems are powered. Watch the forecast and get ready to head to the Shelter.",
   "panelLateral.tripulacion.titulo": "Crew status",
   "panelLateral.tripulacion.ubicacion": "At: {modulo}",
   "panelLateral.tripulacion.dosis": "Dose: {dosis} µGy",
@@ -191,5 +182,8 @@
   "reporte.consejo.blindaje": "The shelter only had {pct}% shielding. Start charging it earlier: the storm can come early.",
   "reporte.consejo.fueraRefugio": "The shelter was ready, but you stayed outside during the storm. When the alarm sounds, run to the shelter!",
   "reporte.consejo.comunicaciones": "With no power in Comms there was no early alert. With 1 unit, Earth warns you a few hours ahead.",
-  "reporte.consejo.mejorar": "Try charging the shielding a bit earlier: the forecast can be wrong by many hours."
+  "reporte.consejo.mejorar": "Try charging the shielding a bit earlier: the forecast can be wrong by many hours.",
+  "glosario.queSignifica": "What does it mean?",
+  "glosario.entendido": "Got it!",
+  "glosario.tocaParaVer": "Tap to see what it means"
 }

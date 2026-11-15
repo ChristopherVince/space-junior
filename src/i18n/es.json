@@ -29,7 +29,6 @@
   "hud.tormentaActiva": "¡Tormenta activa!",
   "hud.refugio": "⚠ ¡Busca refugio!",
   "hud.menu.modulos": "Módulos",
-  "hud.menu.tareas": "Tareas",
   "hud.menu.tripulacion": "Tripulación",
   "hud.menu.registro": "Registro",
   "controles.audioActivar": "Activar sonido",
@@ -75,14 +74,6 @@
   "panelLateral.cerrar": "Cerrar panel",
   "panelLateral.modulos.titulo": "Módulos de la base",
   "panelLateral.modulos.energia": "Energía: {unidades}",
-  "panelLateral.tareas.titulo": "Tareas del comandante",
-  "panelLateral.tareas.invernadero": "Da al menos 3 de energía al Invernadero para producir oxígeno y comida.",
-  "panelLateral.tareas.blindaje": "Da energía al módulo de Energía para cargar el blindaje del refugio antes de la tormenta.",
-  "panelLateral.tareas.comunicaciones": "Activa Comunicaciones con al menos 1 de energía para recibir alerta temprana.",
-  "panelLateral.tareas.enfermeria": "Asigna energía a Enfermería para cuidar la radiación de la tripulación.",
-  "panelLateral.tareas.refugio": "¡La tormenta se acerca! Lleva al comandante al Refugio de inmediato.",
-  "panelLateral.tareas.enRefugio": "Mantén a la tripulación en el Refugio hasta que pase la tormenta.",
-  "panelLateral.tareas.listo": "Sistemas principales atendidos. Vigila el pronóstico y prepárate para ir al Refugio.",
   "panelLateral.tripulacion.titulo": "Estado de la tripulación",
   "panelLateral.tripulacion.ubicacion": "En: {modulo}",
   "panelLateral.tripulacion.dosis": "Dosis: {dosis} µGy",
@@ -191,5 +182,8 @@
   "reporte.consejo.blindaje": "El refugio tenía solo {pct}% de blindaje. Empieza a cargarlo antes: la tormenta puede adelantarse.",
   "reporte.consejo.fueraRefugio": "El refugio estaba listo, pero te quedaste fuera durante la tormenta. Cuando suene la alarma, ¡corre al refugio!",
   "reporte.consejo.comunicaciones": "Sin energía en Comunicaciones no hubo alerta temprana. Con 1 unidad, la Tierra te avisa unas horas antes.",
-  "reporte.consejo.mejorar": "Prueba a cargar el blindaje un poco antes: el pronóstico puede equivocarse por muchas horas."
+  "reporte.consejo.mejorar": "Prueba a cargar el blindaje un poco antes: el pronóstico puede equivocarse por muchas horas.",
+  "glosario.queSignifica": "¿Qué significa?",
+  "glosario.entendido": "¡Entendido!",
+  "glosario.tocaParaVer": "Toca para ver qué significa"
 }
