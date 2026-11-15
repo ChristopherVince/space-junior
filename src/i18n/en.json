@@ -173,5 +173,13 @@
   "inicio.tituloLinea1": "SPACE",
   "inicio.tituloLinea2": "JUNIOR",
   "inicio.subtituloChapea": "Educational simulator based on the CHAPEA program",
-  "inicio.honestidadTitulo": "Real NASA science"
+  "inicio.honestidadTitulo": "Real NASA science",
+  "contexto.insignia": "Your Mars mission",
+  "contexto.titulo": "Hello, Commander!",
+  "contexto.intro": "You live in a Mars base with 3 fellow astronauts. Your job as captain is to keep them safe before a solar storm hits.",
+  "contexto.objetivoTitulo": "What is your goal?",
+  "contexto.punto1": "Walk around the base and enter modules to power them up.",
+  "contexto.punto2": "Share your 10 power bolts between oxygen, shield, and health.",
+  "contexto.punto3": "When the storm gets close, run with your crew to the Shelter!",
+  "contexto.boton": "Got it, let's play!"
 }

@@ -173,5 +173,13 @@
   "inicio.tituloLinea1": "SPACE",
   "inicio.tituloLinea2": "JUNIOR",
   "inicio.subtituloChapea": "Simulador educativo basado en el programa CHAPEA",
-  "inicio.honestidadTitulo": "Ciencia real de NASA"
+  "inicio.honestidadTitulo": "Ciencia real de NASA",
+  "contexto.insignia": "Tu misión en Marte",
+  "contexto.titulo": "¡Hola, Comandante!",
+  "contexto.intro": "Vives en una base en Marte junto a 3 compañeros astronautas. Tu trabajo como capitán es cuidarlos antes de que llegue una tormenta solar.",
+  "contexto.objetivoTitulo": "¿Cuál es tu objetivo?",
+  "contexto.punto1": "Camina por la base y entra a los módulos para activarlos.",
+  "contexto.punto2": "Reparte tus 10 rayos de energía entre oxígeno, escudo y salud.",
+  "contexto.punto3": "Cuando se acerque la tormenta, ¡corre con tu equipo al Refugio!",
+  "contexto.boton": "¡Entendido, a jugar!"
 }
