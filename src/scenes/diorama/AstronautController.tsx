@@ -132,7 +132,7 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
       const objetivo = rutaRef.current[0];
       const diffX = objetivo.x - pos.current.x;
       const diffZ = objetivo.z - pos.current.z;
-      if (Math.hypot(diffX, diffZ) < 0.0001) {
+      if (Math.hypot(diffX, diffZ) < 0.04) {
         rutaRef.current.shift();
         if (
           rutaRef.current.length === 0 &&

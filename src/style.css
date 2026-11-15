@@ -700,16 +700,16 @@ body {
   }
 }
 
-/* ── Pantalla de inicio (#32) ─────────────────────────────── */
+/* ── Pantalla de inicio (#32, #42) ────────────────────────── */
 .inicio {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  background: rgba(58, 28, 16, 0.45);
-  backdrop-filter: blur(3px);
+  padding: 20px;
+  background: rgba(52, 24, 15, 0.42);
+  backdrop-filter: blur(4px);
   z-index: 30;
   pointer-events: auto;
 }
@@ -718,112 +718,314 @@ body {
   display: none !important;
 }
 
-.inicio__tarjeta {
+.inicio__escena {
   position: relative;
-  width: min(560px, 100%);
+  width: min(960px, 100%);
+  min-height: min(560px, calc(100vh - 40px));
   max-height: calc(100vh - 32px);
   overflow-y: auto;
-  padding: 32px 32px 28px;
-  background: rgba(251, 238, 226, 0.97);
-  border: 2px solid rgba(255, 255, 255, 0.85);
-  border-radius: 28px;
-  box-shadow: 0 16px 40px rgba(74, 34, 18, 0.28);
-  color: #3f2417;
-  text-align: center;
+  overflow-x: hidden;
+  border-radius: 32px;
+  border: 3px solid rgba(255, 244, 232, 0.78);
+  box-shadow: 0 24px 56px rgba(48, 20, 10, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 56px;
+  color: #fff8f0;
   animation: panel-modulo-entrar 0.25s ease-out;
 }
 
+.inicio__paisaje {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .inicio__idiomas {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  z-index: 3;
   display: flex;
-  justify-content: flex-end;
-  gap: 4px;
-  margin: -14px -14px 0 0;
+  gap: 6px;
 }
 
 .inicio__idioma {
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 999px;
-  border: 2px solid rgba(220, 195, 175, 0.75);
-  background: rgba(255, 249, 242, 0.95);
-  color: #5c3a29;
+  border: 2px solid rgba(255, 248, 240, 0.65);
+  background: rgba(255, 249, 242, 0.22);
+  color: #fff8f0;
   font: inherit;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 800;
   cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .inicio__idioma--activo {
-  background: #3f2417;
-  border-color: #3f2417;
-  color: #fbeee2;
+  background: #fdf3e7;
+  border-color: #fdf3e7;
+  color: #4a2a1b;
 }
 
-.inicio__antetitulo {
-  margin: 8px 0 4px;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #b4521e;
+.inicio__contenido {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  align-items: center;
+  gap: 28px;
+}
+
+.inicio__columna-izq {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.inicio__insignia {
+  margin-bottom: 14px;
+  filter: drop-shadow(0 4px 10px rgba(74, 34, 18, 0.18));
 }
 
 .inicio__titulo {
   margin: 0 0 12px;
-  font-size: 44px;
+  display: flex;
+  flex-direction: column;
+  font-size: 62px;
   font-weight: 900;
-  line-height: 1.05;
-  color: #3a2014;
+  line-height: 0.96;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-shadow: 0 4px 14px rgba(92, 42, 22, 0.24);
+}
+
+.inicio__titulo-blanco {
+  color: #fffaf5;
+}
+
+.inicio__titulo-amarillo {
+  color: #fce068;
 }
 
 .inicio__subtitulo {
-  margin: 0 0 14px;
-  font-size: 18px;
-  line-height: 1.45;
-  color: #5c3a29;
-}
-
-.inicio__honestidad {
-  margin: 0 0 18px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: rgba(255, 249, 242, 0.9);
-  border: 1px dashed rgba(180, 82, 30, 0.45);
-  font-size: 14px;
-  line-height: 1.45;
-  color: #5c3a29;
-}
-
-.inicio__pasos {
-  margin: 0 auto 18px;
-  padding-left: 22px;
-  max-width: 420px;
-  text-align: left;
-  font-size: 15px;
-  line-height: 1.6;
-  color: #3f2417;
+  margin: 0 0 26px;
+  max-width: 340px;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.32;
+  color: rgba(255, 249, 242, 0.94);
+  text-shadow: 0 2px 6px rgba(92, 42, 22, 0.2);
 }
 
 .inicio__acciones {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
   gap: 12px;
+  width: min(260px, 100%);
 }
 
-.inicio__jugar {
-  padding: 12px 34px;
-  font-size: 18px;
+.inicio__pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 24px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
+}
+
+.inicio__pill:hover {
+  transform: translateY(-2px);
+}
+
+.inicio__pill:active {
+  transform: translateY(0);
+}
+
+.inicio__pill--jugar {
+  background: linear-gradient(180deg, #fce47d 0%, #f7cf52 100%);
+  border: 2px solid #fff6ce;
+  color: #4a2a1b;
+  box-shadow: 0 8px 18px rgba(145, 78, 24, 0.28);
+}
+
+.inicio__pill--jugar .inicio__pill-icono {
+  color: #9e5231;
+  font-size: 16px;
+}
+
+.inicio__pill--secundario {
+  background: rgba(253, 243, 231, 0.95);
+  border: 2px solid rgba(255, 252, 248, 0.95);
+  color: #5a3524;
+  box-shadow: 0 6px 14px rgba(112, 56, 32, 0.18);
+}
+
+.inicio__pill--secundario .inicio__pill-icono {
+  color: #a85c3a;
+  font-size: 17px;
+}
+
+.inicio__ayuda-caja {
+  margin-top: 14px;
+  padding: 12px 14px;
+  max-width: 360px;
+  border-radius: 18px;
+  background: rgba(253, 243, 231, 0.94);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  color: #4a2a1b;
+  box-shadow: 0 8px 20px rgba(74, 34, 18, 0.22);
+}
+
+.inicio__honestidad {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #5c3a29;
+}
+
+.inicio__pasos {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #3f2417;
+}
+
+.inicio__columna-der {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inicio__astronauta-svg {
+  width: min(410px, 100%);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 16px 26px rgba(92, 40, 20, 0.28));
+}
+
+@media (max-width: 760px) {
+  .inicio {
+    padding: 10px;
+  }
+  .inicio__escena {
+    padding: 24px 20px 22px;
+    border-radius: 24px;
+    min-height: auto;
+  }
+  .inicio__contenido {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    text-align: center;
+  }
+  .inicio__columna-izq {
+    align-items: center;
+    text-align: center;
+  }
+  .inicio__insignia {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 8px;
+  }
+  .inicio__titulo {
+    font-size: 44px;
+  }
+  .inicio__subtitulo {
+    font-size: 15.5px;
+    margin-bottom: 16px;
+  }
+  .inicio__acciones {
+    width: min(260px, 100%);
+  }
+  .inicio__pill {
+    padding: 11px 20px;
+    font-size: 15.5px;
+  }
+  .inicio__astronauta-svg {
+    width: min(230px, 72vw);
+  }
+}
+
+/* ── Etiquetas flotantes de módulos (#43) ─────────────────── */
+.etiqueta-modulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.72);
+  background: rgba(28, 22, 18, 0.78);
+  color: #fff8f0;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28);
+  transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease;
+  user-select: none;
+}
+
+.etiqueta-modulo:hover,
+.etiqueta-modulo--activo {
+  transform: scale(1.07);
+  background: rgba(245, 158, 11, 0.94);
+  border-color: #ffffff;
+  color: #27150c;
+}
+
+.etiqueta-modulo--refugio {
+  background: rgba(12, 74, 110, 0.88);
+  border-color: #38bdf8;
+  color: #e0f2fe;
+}
+
+.etiqueta-modulo--alerta {
+  background: rgba(21, 128, 61, 0.95);
+  border-color: #86efac;
+  color: #ffffff;
+  animation: etiqueta-refugio-pulso 0.9s infinite alternate ease-in-out;
+}
+
+@keyframes etiqueta-refugio-pulso {
+  from {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.65);
+  }
+  to {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+}
+
+.etiqueta-modulo__icono {
+  font-size: 13px;
+  line-height: 1;
 }
 
 @media (max-width: 640px) {
-  .inicio__tarjeta {
-    padding: 26px 18px 20px;
+  .etiqueta-modulo {
+    padding: 2px 7px;
+    font-size: 9.5px;
+    gap: 3px;
   }
-  .inicio__titulo {
-    font-size: 34px;
-  }
-  .inicio__subtitulo {
-    font-size: 16px;
+  .etiqueta-modulo__icono {
+    font-size: 10.5px;
   }
 }
 

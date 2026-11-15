@@ -30,11 +30,9 @@ export interface Tramo {
   hasta: [number, number];
 }
 
-/** Senderos exteriores que unen las esclusas del hábitat con los paneles solares y el acceso. */
+/** Sendero exterior desde la única esclusa norte hacia los paneles solares (#44). */
 export const CAMINOS: Tramo[] = [
   { desde: [0, -5.2], hasta: [0, -6.2] },
-  { desde: [-5.3, 5.2], hasta: [-5.3, 6.6] },
-  { desde: [7.4, 5.2], hasta: [7.4, 6.6] },
 ];
 
 export const PLAZOLETAS: [number, number][] = CAMINOS.map((tramo) => tramo.hasta);

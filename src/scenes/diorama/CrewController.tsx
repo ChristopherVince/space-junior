@@ -158,16 +158,24 @@ export function CrewController() {
         const rz = objetivo.z - st.z;
         const dist = Math.hypot(rx, rz);
 
-        if (dist < 0.0001) {
+        if (dist < 0.04) {
           st.ruta.shift();
           if (st.ruta.length === 0) {
             store.dispatch({ type: 'MOVER_TRIPULANTE', quien: b.id, modulo: st.destino });
           }
         } else {
           const paso = Math.min(VELOCIDAD_BOT * dt, dist);
-          const siguiente = resolverMovimientoConMuros(st.x, st.z, rx / dist * paso, rz / dist * paso, RADIO_BOT);
+          const siguiente = resolverMovimientoConMuros(st.x, st.z, (rx / dist) * paso, (rz / dist) * paso, RADIO_BOT);
+          const avanzo = Math.hypot(siguiente.x - st.x, siguiente.z - st.z);
           st.x = siguiente.x;
           st.z = siguiente.z;
+
+          if (Math.hypot(objetivo.x - st.x, objetivo.z - st.z) < 0.04 || avanzo < 0.0001) {
+            st.ruta.shift();
+            if (st.ruta.length === 0) {
+              store.dispatch({ type: 'MOVER_TRIPULANTE', quien: b.id, modulo: st.destino });
+            }
+          }
 
           const anguloObjetivo = Math.atan2(rx, rz);
           let diff = anguloObjetivo - grupo.rotation.y;

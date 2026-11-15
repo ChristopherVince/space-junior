@@ -15,8 +15,8 @@ export interface ConfigBotEscena {
 
 // Posiciones iniciales dentro de cada módulo en la planta interior de Mars Dune Alpha (#14).
 export const BOTS_ESCENA: readonly ConfigBotEscena[] = [
-  { id: 'ingeniero', moduloBase: 'energia', posInicial: [3.6, 3.2], offset: [-0.45, 0.25] },
-  { id: 'medico', moduloBase: 'enfermeria', posInicial: [7.6, 3.2], offset: [0.4, -0.25] },
+  { id: 'ingeniero', moduloBase: 'energia', posInicial: [3.6, 3.15], offset: [-0.45, 0.25] },
+  { id: 'medico', moduloBase: 'enfermeria', posInicial: [7.6, 3.15], offset: [0.4, -0.25] },
   { id: 'cientifico', moduloBase: 'invernadero', posInicial: [-5.5, 0], offset: [-0.25, 0.55] },
 ];
 
