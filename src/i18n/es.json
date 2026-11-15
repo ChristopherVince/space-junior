@@ -248,5 +248,12 @@
   "fin.texto": "¡Gracias por cuidar a tu tripulación, comandante! ¿Lo intentas otra vez con otra tormenta real?",
   "fin.texto3": "¡Misión cumplida, comandante! Tu tripulación está a salvo. ¿Te animas con otra tormenta real?",
   "fin.verOtraVez": "Ver la historia otra vez",
-  "fin.menu": "Volver al menú"
+  "fin.menu": "Volver al menú",
+  "adelanto.titulo": "¡La tormenta se adelantó!",
+  "adelanto.horas": "¡Llegó {horas} horas antes!",
+  "adelanto.texto": "El pronóstico decía que llegaría en {pronostico} horas, pero el Sol no espera a nadie. Nadie lo tenía previsto.",
+  "adelanto.conAlerta": "La antena de Comunicaciones dio la alerta. ¡Todos al refugio, ya!",
+  "adelanto.sinAlerta": "Sin energía en Comunicaciones no hubo alerta temprana. ¡Corran al refugio, ya!",
+  "adelanto.boton": "🛡️ ¡Al refugio!",
+  "panelModulo.bloqueadoTormenta": "Durante la tormenta no se puede cambiar la energía: todos deben estar en el refugio."
 }

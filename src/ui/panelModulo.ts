@@ -42,6 +42,9 @@ export function montarPanelModulo(raiz: HTMLElement) {
     const actual = e.energiaAsignada[modulo] ?? 0;
     const libre = e.recursos.energia;
     const sinEnergia = libre <= 0;
+    // En alerta o tormenta la energía queda congelada (las reglas también lo impiden).
+    const bloqueado = e.fase === 'refugio' || e.fase === 'tormenta';
+    panel.classList.toggle('panel-modulo--bloqueado', bloqueado);
     const tarea = e.tareaPendiente;
     const pendiente = tarea ? `<div class="panel-modulo__tarea" role="status">
       <strong>${t('tarea.titulo')}</strong>
@@ -73,7 +76,7 @@ export function montarPanelModulo(raiz: HTMLElement) {
             class="panel-modulo__btn panel-modulo__btn--menos"
             data-accion="menos"
             aria-label="${t('panelModulo.quitar')}"
-            ${actual <= 0 ? 'disabled' : ''}
+            ${actual <= 0 || bloqueado ? 'disabled' : ''}
           >−</button>
 
           <div class="panel-modulo__valor" aria-live="polite">
@@ -86,14 +89,17 @@ export function montarPanelModulo(raiz: HTMLElement) {
             class="panel-modulo__btn panel-modulo__btn--mas ${sinEnergia ? 'panel-modulo__btn--agotado' : ''}"
             data-accion="mas"
             aria-label="${t('panelModulo.dar')}"
+            ${bloqueado ? 'disabled' : ''}
           >+</button>
         </div>
       </div>
 
       ${
-        sinEnergia || avisoSinEnergiaForzado
-          ? `<div class="panel-modulo__alerta" role="status">${t('panelModulo.sinEnergia')}</div>`
-          : ''
+        bloqueado
+          ? `<div class="panel-modulo__bloqueo" role="status">🔒 ${t('panelModulo.bloqueadoTormenta')}</div>`
+          : sinEnergia || avisoSinEnergiaForzado
+            ? `<div class="panel-modulo__alerta" role="status">${t('panelModulo.sinEnergia')}</div>`
+            : ''
       }
     `}`;
     if (contenido !== contenidoAnterior) {
@@ -108,6 +114,7 @@ export function montarPanelModulo(raiz: HTMLElement) {
 
     const e = store.getState();
     const modulo = e.tripulacion.comandante.modulo;
+    if (e.fase === 'refugio' || e.fase === 'tormenta') return;
     if (btn.dataset.accion === 'cancelar') {
       store.dispatch({ type: 'CANCELAR_TAREA' });
       return;

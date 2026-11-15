@@ -248,5 +248,12 @@
   "fin.texto": "Thanks for taking care of your crew, commander! Try again with another real storm?",
   "fin.texto3": "Mission accomplished, commander! Your crew is safe. Ready for another real storm?",
   "fin.verOtraVez": "Watch the story again",
-  "fin.menu": "Back to menu"
+  "fin.menu": "Back to menu",
+  "adelanto.titulo": "The storm came early!",
+  "adelanto.horas": "It arrived {horas} hours early!",
+  "adelanto.texto": "The forecast said it would arrive in {pronostico} hours, but the Sun waits for no one. Nobody saw it coming.",
+  "adelanto.conAlerta": "The Comms antenna sent the alert. Everyone to the shelter, now!",
+  "adelanto.sinAlerta": "With no power in Comms there was no early alert. Run to the shelter, now!",
+  "adelanto.boton": "🛡️ To the shelter!",
+  "panelModulo.bloqueadoTormenta": "During the storm you can't change the power: everyone must be in the shelter."
 }
