@@ -17,6 +17,7 @@
   "hud.menu.tripulacion": "Crew",
   "hud.menu.registro": "Log",
   "controles.audioActivar": "Turn sound on",
+  "controles.vista": "View {numero}",
   "controles.audioSilenciar": "Mute alarm",
   "dialogo.decidir": "Decide",
   "dialogo.aceptar": "Give power",

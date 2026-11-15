@@ -17,6 +17,7 @@
   "hud.menu.tripulacion": "Tripulación",
   "hud.menu.registro": "Registro",
   "controles.audioActivar": "Activar sonido",
+  "controles.vista": "Vista {numero}",
   "controles.audioSilenciar": "Silenciar alarma",
   "dialogo.decidir": "Decidir",
   "dialogo.aceptar": "Dar energía",
