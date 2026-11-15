@@ -1,0 +1,35 @@
+.glosario-termino, .reporte .glosario-termino {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+.hud .glosario-termino { pointer-events: auto; }
+.glosario-termino:focus-visible { outline: 2px solid #ed9e42; outline-offset: 2px; }
+.glosario-aviso {
+  position: fixed;
+  z-index: 100;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(360px, 85vw);
+  padding: 10px 14px;
+  border: 1px solid #e2bd8b;
+  border-radius: 10px;
+  background: #172235;
+  color: #fff;
+  box-shadow: 0 4px 16px #0007;
+  font: 15px/1.4 system-ui, sans-serif;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.glosario-aviso--dialogo { bottom: auto; top: 25%; }
+.hud-chip__nombre { font-size: 12px; }

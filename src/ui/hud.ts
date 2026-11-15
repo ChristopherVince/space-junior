@@ -86,6 +86,7 @@ function chip(clase: 'energia' | 'soporte' | 'blindaje', labelKey: string, pct: 
       <span class="hud-chip__icono" aria-hidden="true">${ICONOS_RECURSO[clase]}</span>
       <div class="hud-chip__info">
         <div class="hud-chip__fila-texto">
+          <span class="hud-chip__nombre">${t(labelKey)}</span>
           <span class="hud-chip__pct">${pct}%</span>
           ${bajo ? `<span class="hud-chip__bajo">${t('hud.bajo')}</span>` : ''}
         </div>
@@ -480,7 +481,7 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
       <div class="hud-centro">
         <div class="hud-dia">
           <span class="hud-dia__estrella" aria-hidden="true">✦</span>
-          <span>${t('hud.dia')} ${e.sol}</span>
+          <span>${t('hud.dia')} ${e.sol} (${t('glosario.etiquetaSol')})</span>
         </div>
         <div class="hud-capsula">
           ${chip('energia',  'hud.energia',      pctEn)}

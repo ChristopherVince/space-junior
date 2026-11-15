@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { store } from '../../state/store';
 import { getIdioma, t } from '../../i18n';
 import type { ModuleId, Phase } from '../../state/types';
+import { observarObjetivoGuia } from '../../ui/guia';
 import { AstronautController, type DestinoTactil } from './AstronautController';
 import { ZONAS_MODULOS, type ZonaModulo } from './collision';
 import { CrewController } from './CrewController';
@@ -113,6 +114,7 @@ interface ZonaInteractivaProps {
   fase: Phase;
   moduloActual: ModuleId;
   hoverModulo: ModuleId | null;
+  esObjetivo: boolean;
   idioma: ReturnType<typeof getIdioma>;
   onSelect: (id: ModuleId) => void;
   onHover: (id: ModuleId | null) => void;
@@ -123,6 +125,7 @@ function ZonaInteractivaModulo({
   fase,
   moduloActual,
   hoverModulo,
+  esObjetivo,
   onSelect,
   onHover,
 }: ZonaInteractivaProps) {
@@ -135,23 +138,27 @@ function ZonaInteractivaModulo({
 
   const colorBase = enAlertaRefugio
     ? '#22c55e'
-    : estaHover
+    : esObjetivo
       ? '#fbbf24'
-      : estaAdentro
-        ? '#f59e0b'
-        : zona.color;
+      : estaHover
+        ? '#fbbf24'
+        : estaAdentro
+          ? '#f59e0b'
+          : zona.color;
 
-  const opacidadBase = enAlertaRefugio
-    ? 0.34
-    : estaHover
-      ? 0.25
-      : estaAdentro
-        ? 0.2
-        : esRefugio
-          ? 0.16
-          : 0.1;
+  const opacidadBase = esObjetivo
+    ? 0.4
+    : enAlertaRefugio
+      ? 0.34
+      : estaHover
+        ? 0.25
+        : estaAdentro
+          ? 0.2
+          : esRefugio
+            ? 0.16
+            : 0.1;
 
-  const opacidadBorde = enAlertaRefugio
+  const opacidadBorde = enAlertaRefugio || esObjetivo
     ? 0.92
     : estaHover || estaAdentro
       ? 0.85
@@ -164,7 +171,7 @@ function ZonaInteractivaModulo({
     if (enAlertaRefugio) {
       const pulso = 0.5 + 0.5 * Math.sin(clock.elapsedTime * 6);
       matPisoRef.current.opacity = 0.22 + pulso * 0.24;
-    } else if (esRefugio && !estaHover && !estaAdentro) {
+    } else if (esRefugio && !estaHover && !estaAdentro && !esObjetivo) {
       const pulsoSuave = 0.5 + 0.5 * Math.sin(clock.elapsedTime * 2.2);
       matPisoRef.current.opacity = 0.13 + pulsoSuave * 0.06;
     } else {
@@ -174,13 +181,13 @@ function ZonaInteractivaModulo({
 
   const anchoInterior = Math.max(0.4, zona.w - 0.34);
   const fondoInterior = Math.max(0.4, zona.d - 0.34);
-  const grosorBorde = esRefugio || estaAdentro || estaHover ? 0.11 : 0.08;
+  const grosorBorde = esRefugio || estaAdentro || estaHover || esObjetivo ? 0.11 : 0.08;
 
   const clasesEtiqueta = [
     'etiqueta-modulo',
     esRefugio ? 'etiqueta-modulo--refugio' : '',
     enAlertaRefugio ? 'etiqueta-modulo--alerta' : '',
-    estaAdentro || estaHover ? 'etiqueta-modulo--activo' : '',
+    estaAdentro || estaHover || esObjetivo ? 'etiqueta-modulo--activo' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -218,6 +225,14 @@ function ZonaInteractivaModulo({
           <meshBasicMaterial color={colorBase} transparent opacity={opacidadBorde} depthWrite={false} />
         </mesh>
       </group>
+
+      {/* Indicador visual del objetivo de la guía del primer sol */}
+      {esObjetivo && (
+        <mesh position={[0, 3.5, 0]} rotation={[Math.PI, 0, 0]}>
+          <coneGeometry args={[0.45, 0.9, 4]} />
+          <meshBasicMaterial color="#fbbf24" depthTest={false} />
+        </mesh>
+      )}
 
       {/* Etiqueta flotante con ícono y nombre localizado sobre cada módulo (#43) */}
       {mostrarEtiqueta && (
@@ -281,6 +296,9 @@ export function MarsDioramaScene() {
   const [moduloActual, setModuloActual] = useState<ModuleId>(() => store.getState().tripulacion.comandante.modulo);
   const [fase, setFase] = useState<Phase>(() => store.getState().fase);
   const [idioma, setIdiomaEstado] = useState(() => getIdioma());
+  const [objetivoGuia, setObjetivoGuia] = useState<ModuleId | null>(null);
+
+  useEffect(() => observarObjetivoGuia(setObjetivoGuia), []);
 
   useEffect(() => {
     const desuscribir = store.subscribe((estado) => {
@@ -395,6 +413,7 @@ export function MarsDioramaScene() {
             fase={fase}
             moduloActual={moduloActual}
             hoverModulo={hoverModulo}
+            esObjetivo={objetivoGuia === z.id}
             idioma={idioma}
             onSelect={seleccionarModulo}
             onHover={(id) => setHoverModulo((prev) => (id === null ? null : id ?? prev))}
