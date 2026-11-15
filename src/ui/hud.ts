@@ -246,6 +246,7 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
   let ultimoIdiomaHud = '';
   let ultimoPanelPintado: PanelLateralId | null | undefined = undefined;
   let pausadoPorDialogo = false;
+  let contenidoDialogo = '';
 
   const pintarMenuLateral = () => {
     ultimoPanelPintado = panelActivo;
@@ -472,7 +473,7 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
         pausadoPorDialogo = true;
         queueMicrotask(() => store.dispatch({ type: 'PAUSAR', pausado: true }));
       }
-      dialogo.innerHTML = `
+      const contenido = `
         <div class="dialogo__tarjeta" role="dialog" aria-modal="true" aria-labelledby="dialogo-rol">
         <div class="dialogo__retrato" style="--bot-color:${color.primario}">
           ${retratoBot(quien)}
@@ -488,7 +489,11 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
           <div class="dialogo__acciones">
             <button type="button" class="dialogo__btn dialogo__btn--si" data-r="si">
               <span class="dialogo__btn-icono" aria-hidden="true">⚡</span>
-              <span>${t('dialogo.aceptar')}</span>
+              <span>${t('dialogo.irUna', { modulo: t(`modulo.${e.peticionActiva.modulo ?? (quien === 'ingeniero' ? 'energia' : quien === 'medico' ? 'enfermeria' : 'invernadero')}`) })}</span>
+            </button>
+            <button type="button" class="dialogo__btn dialogo__btn--si" data-r="dos">
+              <span class="dialogo__btn-icono" aria-hidden="true">⚡</span>
+              <span>${t('dialogo.irDos')}</span>
             </button>
             <button type="button" class="dialogo__btn dialogo__btn--no" data-r="no">
               <span class="dialogo__btn-icono" aria-hidden="true">✕</span>
@@ -498,6 +503,10 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
         </div>
         </div>
       `;
+      if (contenido !== contenidoDialogo || recienAbierto) {
+        dialogo.innerHTML = contenido;
+        contenidoDialogo = contenido;
+      }
       if (recienAbierto) dialogo.querySelector<HTMLButtonElement>('[data-r="si"]')?.focus();
     } else {
       dialogo.hidden = true;
@@ -513,7 +522,7 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
   dialogo.addEventListener('click', (ev) => {
     const btn = (ev.target as HTMLElement).closest<HTMLElement>('[data-r]');
     const r = btn?.dataset.r;
-    if (r) store.dispatch({ type: 'RESOLVER_PETICION', aceptada: r === 'si' });
+    if (r) store.dispatch({ type: 'RESOLVER_PETICION', aceptada: r !== 'no', unidades: r === 'dos' ? 2 : 1 });
   });
 
   store.subscribe(pintar);
