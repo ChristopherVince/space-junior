@@ -4,10 +4,12 @@ import * as THREE from 'three';
 import { BOTS_ESCENA, destinoDeBot, type BotId } from '../../bots/bots';
 import { store } from '../../state/store';
 import type { GameState, ModuleId } from '../../state/types';
-import { calcularRutaFija, type PuntoRuta } from '../rutas';
+import { calcularRutaFija, calcularRutaAlRefugio, type PuntoRuta } from '../rutas';
 import { Astronaut } from './Astronaut';
+import { resolverMovimientoConMuros } from './collision';
 
 const VELOCIDAD_BOT = 4.8;
+const RADIO_BOT = 0.26;
 const PISO_Y = 0.15;
 
 interface BotState {
@@ -15,6 +17,7 @@ interface BotState {
   z: number;
   ruta: PuntoRuta[];
   destino: ModuleId;
+  evacuando: boolean;
 }
 
 /**
@@ -45,10 +48,11 @@ export function CrewController() {
       BOTS_ESCENA.map((b) => [
         b.id,
         {
-          x: b.posInicial[0] + b.offset[0],
-          z: b.posInicial[1] + b.offset[1],
+          x: b.posInicial[0],
+          z: b.posInicial[1],
           ruta: [],
           destino: b.moduloBase,
+          evacuando: false,
         },
       ]),
     ) as unknown as Record<BotId, BotState>,
@@ -56,14 +60,28 @@ export function CrewController() {
 
   useEffect(() => {
     const sincronizarConEstado = (estado: GameState) => {
+      const alerta = estado.fase === 'refugio' || estado.fase === 'tormenta';
       const peticionDe =
         estado.peticionActiva && estado.peticionActiva.de !== 'comandante'
           ? estado.peticionActiva.de
           : null;
-      setBotConPeticion(peticionDe);
+      setBotConPeticion(alerta ? null : peticionDe);
 
       for (const b of BOTS_ESCENA) {
         const st = estadoBots.current[b.id];
+        if (alerta) {
+          if (!st.evacuando) {
+            st.evacuando = true;
+            st.destino = 'refugio';
+            st.ruta = calcularRutaAlRefugio(b.id, st.x, st.z);
+          }
+          continue;
+        }
+        st.evacuando = false;
+        if (estado.fase === 'reporte') {
+          st.ruta = [];
+          continue;
+        }
         const nuevoDestino = destinoDeBot(estado, b);
 
         if (st.destino !== nuevoDestino) {
@@ -117,23 +135,20 @@ export function CrewController() {
 
       if (enMarcha) {
         const objetivo = st.ruta[0];
-        const esUltimo = st.ruta.length === 1;
-        const factorOffset = esUltimo ? 1 : 0.35;
-        const tx = objetivo.x + b.offset[0] * factorOffset;
-        const tz = objetivo.z + b.offset[1] * factorOffset;
-        const rx = tx - st.x;
-        const rz = tz - st.z;
+        const rx = objetivo.x - st.x;
+        const rz = objetivo.z - st.z;
         const dist = Math.hypot(rx, rz);
 
-        if (dist < 0.14) {
+        if (dist < 0.0001) {
           st.ruta.shift();
-          if (st.ruta.length === 0 && store.getState().tripulacion[b.id].modulo !== st.destino) {
+          if (st.ruta.length === 0) {
             store.dispatch({ type: 'MOVER_TRIPULANTE', quien: b.id, modulo: st.destino });
           }
         } else {
           const paso = Math.min(VELOCIDAD_BOT * dt, dist);
-          st.x += (rx / dist) * paso;
-          st.z += (rz / dist) * paso;
+          const siguiente = resolverMovimientoConMuros(st.x, st.z, rx / dist * paso, rz / dist * paso, RADIO_BOT);
+          st.x = siguiente.x;
+          st.z = siguiente.z;
 
           const anguloObjetivo = Math.atan2(rx, rz);
           let diff = anguloObjetivo - grupo.rotation.y;
@@ -156,7 +171,7 @@ export function CrewController() {
       {BOTS_ESCENA.map((b) => (
         <group
           key={b.id}
-          position={[b.posInicial[0] + b.offset[0], PISO_Y, b.posInicial[1] + b.offset[1]]}
+          position={[b.posInicial[0], PISO_Y, b.posInicial[1]]}
           ref={(el) => {
             gruposRef.current[b.id] = el;
           }}

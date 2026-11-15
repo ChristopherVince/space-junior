@@ -97,10 +97,53 @@ export function colisionaConMuros(x: number, z: number, radio: number): boolean 
   return false;
 }
 
+/** Aplica un desplazamiento X/Z por ejes para conservar el deslizamiento junto a los muros. */
+export function resolverMovimientoConMuros(
+  x: number,
+  z: number,
+  dx: number,
+  dz: number,
+  radio: number,
+): { x: number; z: number } {
+  let siguienteX = x;
+  let siguienteZ = z;
+
+  const pasos = Math.max(1, Math.ceil(Math.hypot(dx, dz) / (radio * 2)));
+  for (let i = 0; i < pasos; i++) {
+    if (!colisionaConMuros(siguienteX + dx / pasos, siguienteZ, radio)) siguienteX += dx / pasos;
+    if (!colisionaConMuros(siguienteX, siguienteZ + dz / pasos, radio)) siguienteZ += dz / pasos;
+  }
+
+  return { x: siguienteX, z: siguienteZ };
+}
+
+/** Intersección exacta del segmento con AABB expandidas por el radio. */
+export function segmentoTransitable(a: { x: number; z: number }, b: { x: number; z: number }, radio = 0.26): boolean {
+  if (colisionaConMuros(a.x, a.z, radio) || colisionaConMuros(b.x, b.z, radio)) return false;
+  return !MUROS_COLISION.some((m) => {
+    let entrada = 0;
+    let salida = 1;
+    for (const [inicio, delta, minimo, maximo] of [
+      [a.x, b.x - a.x, m.x - m.ancho / 2 - radio, m.x + m.ancho / 2 + radio],
+      [a.z, b.z - a.z, m.z - m.fondo / 2 - radio, m.z + m.fondo / 2 + radio],
+    ]) {
+      if (Math.abs(delta) < 1e-12) {
+        if (inicio <= minimo || inicio >= maximo) return false;
+      } else {
+        const t1 = (minimo - inicio) / delta;
+        const t2 = (maximo - inicio) / delta;
+        entrada = Math.max(entrada, Math.min(t1, t2));
+        salida = Math.min(salida, Math.max(t1, t2));
+        if (entrada >= salida) return false;
+      }
+    }
+    return entrada < salida;
+  });
+}
+
 export function detectarModulo(x: number, z: number): ModuleId | null {
   const zona = ZONAS_MODULOS.find(
     (m) => x >= m.xMin && x <= m.xMax && z >= m.zMin && z <= m.zMax,
   );
   return zona ? zona.id : null;
 }
-

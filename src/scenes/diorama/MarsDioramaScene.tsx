@@ -3,6 +3,7 @@ import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { store } from '../../state/store';
+import { t } from '../../i18n';
 import type { ModuleId, Phase } from '../../state/types';
 import { AstronautController, type DestinoTactil } from './AstronautController';
 import { CrewController } from './CrewController';
@@ -123,6 +124,19 @@ export function MarsDioramaScene() {
   const camara = useThree((estado) => estado.camera);
   const [destinoTactil, setDestinoTactil] = useState<DestinoTactil | null>(null);
   const [vista, setVista] = useState<VistaId>('1');
+  const [hoverModulo, setHoverModulo] = useState<ModuleId | null>(null);
+  const [moduloActual, setModuloActual] = useState<ModuleId>(() => store.getState().tripulacion.comandante.modulo);
+  const [fase, setFase] = useState<Phase>(() => store.getState().fase);
+
+  useEffect(() => {
+    const desuscribir = store.subscribe((estado) => {
+      setModuloActual(estado.tripulacion.comandante.modulo);
+      setFase(estado.fase);
+    });
+    return () => {
+      desuscribir();
+    };
+  }, []);
 
   useEffect(() => {
     const alPresionar = (e: KeyboardEvent) => {
@@ -133,6 +147,41 @@ export function MarsDioramaScene() {
     window.addEventListener('keydown', alPresionar);
     return () => window.removeEventListener('keydown', alPresionar);
   }, []);
+
+  // Botones táctiles 1 / 2 / 3 para cambiar perspectiva en móvil y escritorio
+  useEffect(() => {
+    const contenedor = document.getElementById('juego') ?? document.body;
+    const barra = document.createElement('div');
+    barra.style.position = 'fixed';
+    barra.style.top = '14px';
+    barra.style.left = '60px';
+    barra.style.zIndex = '25';
+    barra.style.display = 'flex';
+    barra.style.gap = '4px';
+
+    (['1', '2', '3'] as VistaId[]).forEach((id) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = id;
+      btn.title = t('controles.vista', { numero: id });
+      btn.setAttribute('aria-label', btn.title);
+      btn.style.padding = '6px 10px';
+      btn.style.borderRadius = '8px';
+      btn.style.border = '1px solid rgba(255,255,255,0.25)';
+      btn.style.background = vista === id ? 'rgba(234, 179, 8, 0.9)' : 'rgba(15, 23, 42, 0.78)';
+      btn.style.color = vista === id ? '#0f172a' : '#f8fafc';
+      btn.style.fontWeight = '700';
+      btn.style.fontSize = '13px';
+      btn.style.cursor = 'pointer';
+      btn.onclick = () => setVista(id);
+      barra.appendChild(btn);
+    });
+
+    contenedor.appendChild(barra);
+    return () => {
+      barra.remove();
+    };
+  }, [vista]);
 
   useEffect(() => {
     const config = VISTAS[vista];
@@ -182,13 +231,44 @@ export function MarsDioramaScene() {
           <SolarArray />
         </group>
 
-        {/* Zonas táctiles invisibles para caminar al tocar un módulo (Issue #3) */}
-        {ZONAS_TOQUE.map((z) => (
-          <mesh key={z.id} position={[z.x, 0.2, z.z]} onClick={alTocarModulo(z.id)}>
-            <boxGeometry args={[z.w, 0.4, z.d]} />
-            <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-          </mesh>
-        ))}
+        {/* Zonas táctiles e indicadores visuales por módulo */}
+        {ZONAS_TOQUE.map((z) => {
+          const enAlertaRefugio = z.id === 'refugio' && (fase === 'refugio' || fase === 'tormenta');
+          const resaltado = hoverModulo === z.id || moduloActual === z.id || enAlertaRefugio;
+          const color = enAlertaRefugio
+            ? '#22c55e'
+            : hoverModulo === z.id
+              ? '#fbbf24'
+              : '#60a5fa';
+          const opacidad = enAlertaRefugio ? 0.28 : hoverModulo === z.id ? 0.2 : 0.1;
+
+          return (
+            <group key={z.id} position={[z.x, 0, z.z]}>
+              {resaltado && (
+                <mesh position={[0, 0.165, 0]} rotation-x={-Math.PI / 2}>
+                  <planeGeometry args={[z.w - 0.35, z.d - 0.35]} />
+                  <meshBasicMaterial color={color} transparent opacity={opacidad} depthWrite={false} />
+                </mesh>
+              )}
+              <mesh
+                position={[0, 0.2, 0]}
+                onClick={alTocarModulo(z.id)}
+                onPointerOver={(e) => {
+                  e.stopPropagation();
+                  setHoverModulo(z.id);
+                  document.body.style.cursor = 'pointer';
+                }}
+                onPointerOut={() => {
+                  setHoverModulo((prev) => (prev === z.id ? null : prev));
+                  document.body.style.cursor = 'auto';
+                }}
+              >
+                <boxGeometry args={[z.w, 0.4, z.d]} />
+                <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+              </mesh>
+            </group>
+          );
+        })}
 
         <AstronautController destinoTactil={destinoTactil} posicionRef={posicionJugadorRef} />
         <CrewController />

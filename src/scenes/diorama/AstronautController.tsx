@@ -2,10 +2,15 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, useState, type MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { store } from '../../state/store';
-import type { ModuleId } from '../../state/types';
-import { calcularRutaFija, type PuntoRuta } from '../rutas';
+import type { ModuleId, Phase } from '../../state/types';
+import {
+  calcularRutaAlRefugio,
+  calcularRutaFija,
+  resolverTransicionRefugio,
+  type PuntoRuta,
+} from '../rutas';
 import { Astronaut } from './Astronaut';
-import { colisionaConMuros, detectarModulo } from './collision';
+import { detectarModulo, resolverMovimientoConMuros } from './collision';
 
 const VELOCIDAD = 4.2;
 const RADIO_JUGADOR = 0.26;
@@ -30,17 +35,39 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
   const pos = useRef({ x: 0.1, z: 0 });
   const rutaRef = useRef<PuntoRuta[]>([]);
   const teclas = useRef(new Set<string>());
+  const bloqueadoEnRefugioRef = useRef(false);
   const [caminando, setCaminando] = useState(false);
 
   useEffect(() => {
-    if (!destinoTactil) return;
+    if (!destinoTactil || bloqueadoEnRefugioRef.current) return;
     rutaRef.current = calcularRutaFija(pos.current.x, pos.current.z, destinoTactil.modulo);
   }, [destinoTactil]);
+
+  useEffect(() => {
+    const actualizarBloqueo = (fase: Phase) => {
+      const transicion = resolverTransicionRefugio(fase, bloqueadoEnRefugioRef.current);
+      if (transicion === 'iniciar') {
+        bloqueadoEnRefugioRef.current = true;
+        teclas.current.clear();
+        rutaRef.current = calcularRutaAlRefugio('comandante', pos.current.x, pos.current.z);
+      } else if (transicion === 'liberar') {
+        bloqueadoEnRefugioRef.current = false;
+        rutaRef.current = [];
+      }
+    };
+
+    actualizarBloqueo(store.getState().fase);
+    const desuscribir = store.subscribe((estado) => actualizarBloqueo(estado.fase));
+    return () => {
+      desuscribir();
+    };
+  }, []);
 
   useEffect(() => {
     const alPresionar = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(k)) {
+        if (bloqueadoEnRefugioRef.current) return;
         teclas.current.add(k);
       }
     };
@@ -67,7 +94,7 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
 
     let dx = 0;
     let dz = 0;
-    const usaTeclado = inputRight !== 0 || inputForward !== 0;
+    const usaTeclado = !bloqueadoEnRefugioRef.current && (inputRight !== 0 || inputForward !== 0);
     if (usaTeclado) {
       camera.getWorldDirection(forwardVec);
       forwardVec.y = 0;
@@ -85,8 +112,14 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
       const objetivo = rutaRef.current[0];
       const diffX = objetivo.x - pos.current.x;
       const diffZ = objetivo.z - pos.current.z;
-      if (Math.hypot(diffX, diffZ) < 0.14) {
+      if (Math.hypot(diffX, diffZ) < 0.0001) {
         rutaRef.current.shift();
+        if (
+          rutaRef.current.length === 0 &&
+          bloqueadoEnRefugioRef.current
+        ) {
+          store.dispatch({ type: 'MOVER_TRIPULANTE', quien: 'comandante', modulo: 'refugio' });
+        }
       } else {
         dx = diffX;
         dz = diffZ;
@@ -98,20 +131,12 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
 
     if (enMovimiento) {
       const len = Math.hypot(dx, dz);
-      const vx = (dx / len) * VELOCIDAD * dt;
-      const vz = (dz / len) * VELOCIDAD * dt;
-
-      if (usaTeclado) {
-        if (!colisionaConMuros(pos.current.x + vx, pos.current.z, RADIO_JUGADOR)) {
-          pos.current.x += vx;
-        }
-        if (!colisionaConMuros(pos.current.x, pos.current.z + vz, RADIO_JUGADOR)) {
-          pos.current.z += vz;
-        }
-      } else {
-        pos.current.x += vx;
-        pos.current.z += vz;
-      }
+      const paso = usaTeclado ? VELOCIDAD * dt : Math.min(VELOCIDAD * dt, len);
+      const vx = (dx / len) * paso;
+      const vz = (dz / len) * paso;
+      const siguiente = resolverMovimientoConMuros(pos.current.x, pos.current.z, vx, vz, RADIO_JUGADOR);
+      pos.current.x = siguiente.x;
+      pos.current.z = siguiente.z;
 
       posicionRef.current.x = pos.current.x;
       posicionRef.current.z = pos.current.z;
@@ -125,10 +150,12 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
         grupo.current.rotation.y += diff * Math.min(1, delta * 14);
       }
 
-      const modulo = detectarModulo(pos.current.x, pos.current.z);
-      const actual = store.getState().tripulacion.comandante.modulo;
-      if (modulo && modulo !== actual) {
-        store.dispatch({ type: 'MOVER_TRIPULANTE', quien: 'comandante', modulo });
+      if (!bloqueadoEnRefugioRef.current) {
+        const modulo = detectarModulo(pos.current.x, pos.current.z);
+        const actual = store.getState().tripulacion.comandante.modulo;
+        if (modulo && modulo !== actual) {
+          store.dispatch({ type: 'MOVER_TRIPULANTE', quien: 'comandante', modulo });
+        }
       }
     }
   });
