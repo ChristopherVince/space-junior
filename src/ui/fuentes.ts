@@ -1,4 +1,5 @@
-import { t } from '../i18n';
+import { getIdioma, t } from '../i18n';
+import { store } from '../state/store';
 import './fuentes.css';
 
 const FUENTES = [
@@ -10,10 +11,15 @@ const FUENTES = [
 ] as const;
 
 export function montarFuentes(raiz: HTMLElement, alAbrir: () => void, alCerrar: () => void): () => boolean {
+  const traducciones: { elemento: HTMLElement; clave: string }[] = [];
+  function traducir(elemento: HTMLElement, clave: string) {
+    traducciones.push({ elemento, clave });
+    elemento.textContent = t(clave);
+  }
   const abrir = document.createElement('button');
   abrir.type = 'button';
   abrir.className = 'fuentes-abrir';
-  abrir.textContent = t('fuentes.abrir');
+  traducir(abrir, 'fuentes.abrir');
   abrir.setAttribute('aria-haspopup', 'dialog');
 
   const dialogo = document.createElement('dialog');
@@ -21,20 +27,20 @@ export function montarFuentes(raiz: HTMLElement, alAbrir: () => void, alCerrar: 
   dialogo.setAttribute('aria-labelledby', 'fuentes-titulo');
   const titulo = document.createElement('h1');
   titulo.id = 'fuentes-titulo';
-  titulo.textContent = t('fuentes.titulo');
+  traducir(titulo, 'fuentes.titulo');
   const introduccion = document.createElement('p');
-  introduccion.textContent = t('fuentes.introduccion');
+  traducir(introduccion, 'fuentes.introduccion');
   dialogo.append(titulo, introduccion);
 
   for (const { clave, url } of FUENTES) {
     const seccion = document.createElement('section');
     const subtitulo = document.createElement('h2');
-    subtitulo.textContent = t(`fuentes.${clave}.titulo`);
+    traducir(subtitulo, `fuentes.${clave}.titulo`);
     const descripcion = document.createElement('p');
-    descripcion.textContent = t(`fuentes.${clave}.texto`);
+    traducir(descripcion, `fuentes.${clave}.texto`);
     const enlace = document.createElement('a');
     enlace.href = url;
-    enlace.textContent = t(`fuentes.${clave}.enlace`);
+    traducir(enlace, `fuentes.${clave}.enlace`);
     enlace.target = '_blank';
     enlace.rel = 'noopener noreferrer';
     seccion.append(subtitulo, descripcion, enlace);
@@ -43,16 +49,22 @@ export function montarFuentes(raiz: HTMLElement, alAbrir: () => void, alCerrar: 
 
   const simplificaciones = document.createElement('section');
   const subtitulo = document.createElement('h2');
-  subtitulo.textContent = t('fuentes.simplificado.titulo');
+  traducir(subtitulo, 'fuentes.simplificado.titulo');
   const descripcion = document.createElement('p');
-  descripcion.textContent = t('fuentes.simplificado.texto');
+  traducir(descripcion, 'fuentes.simplificado.texto');
   simplificaciones.append(subtitulo, descripcion);
   const cerrar = document.createElement('button');
   cerrar.type = 'button';
-  cerrar.textContent = t('fuentes.cerrar');
+  traducir(cerrar, 'fuentes.cerrar');
   cerrar.addEventListener('click', () => dialogo.close());
   dialogo.append(simplificaciones, cerrar);
   raiz.append(abrir, dialogo);
+  let idioma = getIdioma();
+  store.subscribe(() => {
+    if (idioma === getIdioma()) return;
+    idioma = getIdioma();
+    for (const { elemento, clave } of traducciones) elemento.textContent = t(clave);
+  });
 
   abrir.addEventListener('click', () => {
     dialogo.showModal();

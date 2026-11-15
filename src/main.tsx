@@ -2,36 +2,37 @@ import { Canvas } from '@react-three/fiber';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import { revisarBots } from './bots/bots';
-import eventos from './data/events.json';
 import { MarsDioramaScene } from './scenes/diorama/MarsDioramaScene';
 import { iniciarReloj } from './state/reloj';
 import { store } from './state/store';
 import { montarHud } from './ui/hud';
+import { montarInicio } from './ui/inicio';
 import { montarReporte } from './ui/reporte';
 import { montarFuentes } from './ui/fuentes';
 
-const juegoRaiz = document.getElementById('juego')!;
-const escena = createRoot(juegoRaiz);
+const escena = createRoot(document.getElementById('juego')!);
 function renderizarEscena(pausada: boolean) {
   escena.render(
-  <Canvas
-    frameloop={pausada ? 'never' : 'always'}
-    shadows
-    orthographic
-    dpr={[1, 2]}
-    camera={{ position: [19, 17, 19], zoom: 34, near: 1, far: 200 }}
-    gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-  >
-    <MarsDioramaScene />
-  </Canvas>,
+    <Canvas
+      frameloop={pausada ? 'never' : 'always'}
+      shadows
+      orthographic
+      dpr={[1, 2]}
+      camera={{ position: [19, 17, 19], zoom: 34, near: 1, far: 200 }}
+      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+    >
+      <MarsDioramaScene />
+    </Canvas>,
   );
 }
 renderizarEscena(false);
 
-montarHud(document.getElementById('interfaz')!);
-montarReporte(document.getElementById('interfaz')!);
+const interfaz = document.getElementById('interfaz')!;
+montarHud(interfaz);
+montarInicio(interfaz);
+montarReporte(interfaz);
 let estabaPausado = false;
-montarFuentes(document.getElementById('interfaz')!, () => {
+montarFuentes(interfaz, () => {
   estabaPausado = store.getState().pausado;
   if (!estabaPausado) store.dispatch({ type: 'PAUSAR', pausado: true });
   renderizarEscena(true);
@@ -40,16 +41,4 @@ montarFuentes(document.getElementById('interfaz')!, () => {
   renderizarEscena(false);
 });
 
-const evento = eventos.eventos[0];
-store.dispatch({
-  type: 'INICIAR_PARTIDA',
-  eventoId: evento.id,
-  pronostico: {
-    horasPronosticadas: evento.horasPronosticadas,
-    margenHoras: evento.margenHoras,
-    horasReales: evento.horasReales,
-  },
-});
-
 iniciarReloj(revisarBots);
-

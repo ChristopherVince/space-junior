@@ -10,6 +10,10 @@ export function setIdioma(nuevo: Idioma) {
   idioma = nuevo;
 }
 
+export function getIdioma(): Idioma {
+  return idioma;
+}
+
 export function t(clave: string, vars: Record<string, string | number> = {}): string {
   const base = textos[idioma][clave] ?? textos.es[clave] ?? clave;
   return base.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? `{${k}}`));

@@ -3,7 +3,7 @@
 .reporte {
   position: absolute;
   inset: 0;
-  z-index: 30;
+  z-index: 40;
   display: flex;
   justify-content: center;
   overflow-y: auto;

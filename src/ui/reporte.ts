@@ -1,5 +1,5 @@
 import eventos from '../data/events.json';
-import { t } from '../i18n';
+import { getIdioma, t } from '../i18n';
 import { store } from '../state/store';
 import type { CrewId, GameState } from '../state/types';
 import './reporte.css';
@@ -30,7 +30,7 @@ function enlace(url: string, etiqueta: string): HTMLAnchorElement | null {
 }
 
 function numero(valor: number): string {
-  return new Intl.NumberFormat(navigator.language.startsWith('es') ? 'es' : 'en', { maximumFractionDigits: 2 }).format(valor);
+  return new Intl.NumberFormat(getIdioma(), { maximumFractionDigits: 2 }).format(valor);
 }
 
 export function montarReporte(raiz: HTMLElement): () => void {
