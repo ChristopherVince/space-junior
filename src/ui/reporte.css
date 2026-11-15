@@ -24,9 +24,10 @@
 }
 
 .reporte h1 { margin: 0 0 12px; font-size: clamp(1.4rem, 4vw, 2rem); }
-.reporte h2 { margin: 16px 0 4px; font-size: 1.1rem; }
-.reporte p { margin: 8px 0; }
-.reporte-tripulacion { padding-left: 1.3em; margin: 8px 0; }
+.reporte h2 { margin: 20px 0 8px; font-size: 1.1rem; }
+.reporte p { margin: 12px 0; }
+.reporte-tripulacion { padding-left: 1.3em; margin: 12px 0; }
+.reporte-tripulacion li + li { margin-top: 6px; }
 .reporte a { color: #a9dcff; }
 .reporte-grafica { margin: 16px 0; }
 .reporte-grafica figcaption { font-weight: 700; }

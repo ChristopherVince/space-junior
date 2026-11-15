@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { store } from '../../state/store';
 import { t } from '../../i18n';
 import type { ModuleId, Phase } from '../../state/types';
+import { observarObjetivoGuia } from '../../ui/guia';
 import { AstronautController, type DestinoTactil } from './AstronautController';
 import { CrewController } from './CrewController';
 import { MarsDuneAlphaMap } from './MarsDuneAlphaMap';
@@ -127,6 +128,9 @@ export function MarsDioramaScene() {
   const [hoverModulo, setHoverModulo] = useState<ModuleId | null>(null);
   const [moduloActual, setModuloActual] = useState<ModuleId>(() => store.getState().tripulacion.comandante.modulo);
   const [fase, setFase] = useState<Phase>(() => store.getState().fase);
+  const [objetivoGuia, setObjetivoGuia] = useState<ModuleId | null>(null);
+
+  useEffect(() => observarObjetivoGuia(setObjetivoGuia), []);
 
   useEffect(() => {
     const desuscribir = store.subscribe((estado) => {
@@ -234,13 +238,14 @@ export function MarsDioramaScene() {
         {/* Zonas táctiles e indicadores visuales por módulo */}
         {ZONAS_TOQUE.map((z) => {
           const enAlertaRefugio = z.id === 'refugio' && (fase === 'refugio' || fase === 'tormenta');
-          const resaltado = hoverModulo === z.id || moduloActual === z.id || enAlertaRefugio;
-          const color = enAlertaRefugio
+          const esObjetivo = objetivoGuia === z.id;
+          const resaltado = hoverModulo === z.id || moduloActual === z.id || enAlertaRefugio || esObjetivo;
+          const color = esObjetivo ? '#fbbf24' : enAlertaRefugio
             ? '#22c55e'
             : hoverModulo === z.id
               ? '#fbbf24'
               : '#60a5fa';
-          const opacidad = enAlertaRefugio ? 0.28 : hoverModulo === z.id ? 0.2 : 0.1;
+          const opacidad = esObjetivo ? 0.4 : enAlertaRefugio ? 0.28 : hoverModulo === z.id ? 0.2 : 0.1;
 
           return (
             <group key={z.id} position={[z.x, 0, z.z]}>
@@ -248,6 +253,12 @@ export function MarsDioramaScene() {
                 <mesh position={[0, 0.165, 0]} rotation-x={-Math.PI / 2}>
                   <planeGeometry args={[z.w - 0.35, z.d - 0.35]} />
                   <meshBasicMaterial color={color} transparent opacity={opacidad} depthWrite={false} />
+                </mesh>
+              )}
+              {esObjetivo && (
+                <mesh position={[0, 3.5, 0]} rotation={[Math.PI, 0, 0]}>
+                  <coneGeometry args={[0.45, 0.9, 4]} />
+                  <meshBasicMaterial color="#fbbf24" depthTest={false} />
                 </mesh>
               )}
               <mesh

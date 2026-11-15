@@ -10,6 +10,7 @@ import { montarInicio } from './ui/inicio';
 import { montarReporte } from './ui/reporte';
 import { montarFuentes } from './ui/fuentes';
 import { montarGlosario } from './ui/glosario';
+import { montarGuia } from './ui/guia';
 
 const escena = createRoot(document.getElementById('juego')!);
 function renderizarEscena(pausada: boolean) {
@@ -31,6 +32,7 @@ renderizarEscena(false);
 const interfaz = document.getElementById('interfaz')!;
 montarGlosario(interfaz);
 montarHud(interfaz);
+montarGuia(interfaz);
 montarInicio(interfaz);
 montarReporte(interfaz);
 let estabaPausado = false;
