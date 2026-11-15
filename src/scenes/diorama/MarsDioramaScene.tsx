@@ -324,41 +324,6 @@ export function MarsDioramaScene() {
     return () => window.removeEventListener('keydown', alPresionar);
   }, []);
 
-  // Botones táctiles 1 / 2 / 3 para cambiar perspectiva en móvil y escritorio
-  useEffect(() => {
-    const contenedor = document.getElementById('juego') ?? document.body;
-    const barra = document.createElement('div');
-    barra.style.position = 'fixed';
-    barra.style.top = '14px';
-    barra.style.left = '60px';
-    barra.style.zIndex = '25';
-    barra.style.display = 'flex';
-    barra.style.gap = '4px';
-
-    (['1', '2', '3'] as VistaId[]).forEach((id) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = id;
-      btn.title = t('controles.vista', { numero: id });
-      btn.setAttribute('aria-label', btn.title);
-      btn.style.padding = '6px 10px';
-      btn.style.borderRadius = '8px';
-      btn.style.border = '1px solid rgba(255,255,255,0.25)';
-      btn.style.background = vista === id ? 'rgba(234, 179, 8, 0.9)' : 'rgba(15, 23, 42, 0.78)';
-      btn.style.color = vista === id ? '#0f172a' : '#f8fafc';
-      btn.style.fontWeight = '700';
-      btn.style.fontSize = '13px';
-      btn.style.cursor = 'pointer';
-      btn.onclick = () => setVista(id);
-      barra.appendChild(btn);
-    });
-
-    contenedor.appendChild(barra);
-    return () => {
-      barra.remove();
-    };
-  }, [vista]);
-
   useEffect(() => {
     const config = VISTAS[vista];
     camara.position.set(...config.posicion);

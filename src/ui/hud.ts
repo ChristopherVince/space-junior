@@ -1,5 +1,5 @@
 // Frente 3 · HUD: cápsula central de recursos, aviso de tormenta arriba a la derecha,
-// menú de pausa (#46) y paneles laterales interactivos (#45: Módulos, Tareas, Tripulación, Registro).
+// menú de pausa (#46) y paneles laterales interactivos (#45: Módulos, Tripulación, Registro).
 import balance from '../data/balance.json';
 import { getIdioma, t } from '../i18n';
 import { abandonarPartida } from '../state/partida';
@@ -14,7 +14,7 @@ import {
 } from './registro';
 
 type BotId = Exclude<CrewId, 'comandante'>;
-export type PanelLateralId = 'modulos' | 'tareas' | 'tripulacion' | 'registro';
+export type PanelLateralId = 'modulos' | 'tripulacion' | 'registro';
 
 const MODULOS_ORDEN: readonly ModuleId[] = [
   'invernadero',
@@ -74,7 +74,6 @@ const ICONOS_RECURSO: Record<string, string> = {
 };
 
 const ICONO_CAPAS = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/><polyline points="2 17 12 22 22 17"/></svg>`;
-const ICONO_TAREAS = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/></svg>`;
 const ICONO_TRIPULACION = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
 const ICONO_REGISTRO = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
 const ICONO_PAUSA = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`;
@@ -132,34 +131,6 @@ function avisoTormenta(e: GameState): string {
     </div>`;
 }
 
-/** Calcula las tareas recomendadas para un niño según la fase y recursos actuales (#45). */
-export function calcularTareas(e: GameState): { clave: string; urgente?: boolean }[] {
-  if (e.fase === 'refugio' || e.fase === 'tormenta') {
-    if (e.tripulacion.comandante.modulo !== 'refugio') {
-      return [{ clave: 'panelLateral.tareas.refugio', urgente: true }];
-    }
-    return [{ clave: 'panelLateral.tareas.enRefugio', urgente: true }];
-  }
-
-  const tareas: { clave: string; urgente?: boolean }[] = [];
-  if ((e.energiaAsignada.invernadero ?? 0) < 3) {
-    tareas.push({ clave: 'panelLateral.tareas.invernadero', urgente: e.recursos.soporteVital < 70 });
-  }
-  if (e.recursos.blindaje < 60 && (e.energiaAsignada.energia ?? 0) < 4) {
-    tareas.push({ clave: 'panelLateral.tareas.blindaje', urgente: true });
-  }
-  if ((e.energiaAsignada.comunicaciones ?? 0) < 1) {
-    tareas.push({ clave: 'panelLateral.tareas.comunicaciones' });
-  }
-  if ((e.energiaAsignada.enfermeria ?? 0) < 1 && e.tripulacion.comandante.dosis >= 60) {
-    tareas.push({ clave: 'panelLateral.tareas.enfermeria' });
-  }
-  if (tareas.length === 0) {
-    tareas.push({ clave: 'panelLateral.tareas.listo' });
-  }
-  return tareas;
-}
-
 function renderizarContenidoPanel(panel: PanelLateralId, e: GameState): { titulo: string; cuerpo: string } {
   if (panel === 'modulos') {
     const items = MODULOS_ORDEN.map((id) => {
@@ -180,22 +151,6 @@ function renderizarContenidoPanel(panel: PanelLateralId, e: GameState): { titulo
     }).join('');
     return {
       titulo: t('panelLateral.modulos.titulo'),
-      cuerpo: `<ul class="hud-panel__lista">${items}</ul>`,
-    };
-  }
-
-  if (panel === 'tareas') {
-    const tareas = calcularTareas(e);
-    const items = tareas
-      .map(
-        (item) => `
-        <li class="hud-panel__item ${item.urgente ? 'hud-panel__item--urgente' : ''}">
-          <p class="hud-panel__item-desc">${t(item.clave)}</p>
-        </li>`,
-      )
-      .join('');
-    return {
-      titulo: t('panelLateral.tareas.titulo'),
       cuerpo: `<ul class="hud-panel__lista">${items}</ul>`,
     };
   }
@@ -290,12 +245,12 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
   let confirmandoAbandono = false;
   let ultimoIdiomaHud = '';
   let ultimoPanelPintado: PanelLateralId | null | undefined = undefined;
+  let pausadoPorDialogo = false;
 
   const pintarMenuLateral = () => {
     ultimoPanelPintado = panelActivo;
     const botones: { id: PanelLateralId; icono: string; clave: string }[] = [
       { id: 'modulos', icono: ICONO_CAPAS, clave: 'hud.menu.modulos' },
-      { id: 'tareas', icono: ICONO_TAREAS, clave: 'hud.menu.tareas' },
       { id: 'tripulacion', icono: ICONO_TRIPULACION, clave: 'hud.menu.tripulacion' },
       { id: 'registro', icono: ICONO_REGISTRO, clave: 'hud.menu.registro' },
     ];
@@ -460,6 +415,7 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
     if (e.fase === 'aviso' || e.fase === 'reporte') {
       hud.hidden = true;
       dialogo.hidden = true;
+      pausadoPorDialogo = false;
       if (panelActivo) cerrarPanelLateral(false);
       if (modalPausa.open) modalPausa.close();
       return;
@@ -509,8 +465,15 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
     if (e.peticionActiva && e.peticionActiva.de !== 'comandante' && botEnLugarDelComandante) {
       const quien = e.peticionActiva.de;
       const color = COLOR_BOT[quien];
+      const recienAbierto = dialogo.hidden;
       dialogo.hidden = false;
+      // Pausa el juego mientras el niño lee y decide.
+      if (recienAbierto && !e.pausado) {
+        pausadoPorDialogo = true;
+        queueMicrotask(() => store.dispatch({ type: 'PAUSAR', pausado: true }));
+      }
       dialogo.innerHTML = `
+        <div class="dialogo__tarjeta" role="dialog" aria-modal="true" aria-labelledby="dialogo-rol">
         <div class="dialogo__retrato" style="--bot-color:${color.primario}">
           ${retratoBot(quien)}
         </div>
@@ -519,7 +482,7 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
             <span class="dialogo__medalla" style="background:${color.primario}">
               ${INSIGNIA_BOT[quien]}
             </span>
-            <b class="dialogo__rol">${t(`rol.${quien}`)}</b>
+            <b class="dialogo__rol" id="dialogo-rol">${t(`rol.${quien}`)}</b>
           </div>
           <p class="dialogo__texto">${t(e.peticionActiva.textoId)}</p>
           <div class="dialogo__acciones">
@@ -533,9 +496,17 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
             </button>
           </div>
         </div>
+        </div>
       `;
+      if (recienAbierto) dialogo.querySelector<HTMLButtonElement>('[data-r="si"]')?.focus();
     } else {
       dialogo.hidden = true;
+      if (pausadoPorDialogo) {
+        pausadoPorDialogo = false;
+        if (e.fase === 'preparacion' || e.fase === 'refugio' || e.fase === 'tormenta') {
+          queueMicrotask(() => store.dispatch({ type: 'PAUSAR', pausado: false }));
+        }
+      }
     }
   };
 

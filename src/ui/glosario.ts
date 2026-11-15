@@ -1,4 +1,14 @@
+// Glosario: subraya palabras difíciles en toda la interfaz para que el niño las
+// toque y vea su significado en una ventana centrada que pausa el juego.
+//
+// Para no cortar el juego a cada rato, la ventana sale SOLA solo:
+// - mientras se prepara la base (no en la portada ni durante la tormenta),
+// - con palabras clave, una vez cada una,
+// - como máximo 3 veces por partida y con al menos 25 s entre una y otra.
+// Tocar una palabra subrayada la muestra siempre.
 import { getIdioma, t } from '../i18n';
+import { store } from '../state/store';
+import type { GameState } from '../state/types';
 import './glosario.css';
 
 type Termino = 'sol' | 'tormenta' | 'radiacion' | 'microgray' | 'blindaje' | 'soporte' | 'pronostico' | 'cme' | 'rover';
@@ -22,48 +32,90 @@ const patrones: Record<'es' | 'en', [Termino, RegExp][]> = {
   ],
 };
 
+const ICONOS: Record<Termino, string> = {
+  sol: '🌗', tormenta: '☀️', radiacion: '☢️', microgray: '📏', blindaje: '🛡️',
+  soporte: '🌱', pronostico: '📡', cme: '💥', rover: '🤖',
+};
+
+/** Palabras que pueden explicarse solas (las demás, solo al tocarlas). */
+const TERMINOS_AUTO: ReadonlySet<Termino> = new Set(['tormenta', 'blindaje', 'soporte', 'radiacion', 'pronostico']);
+const MAX_AUTO_POR_PARTIDA = 3;
+const ESPERA_AUTO_MS = 25_000;
+const FASES_DE_JUEGO: ReadonlySet<GameState['fase']> = new Set(['preparacion', 'refugio', 'tormenta']);
+
 const vistos = new Set<Termino>();
-let temporizador: number | undefined;
-let aviso: HTMLElement | null = null;
+let autoEnPartida = 0;
+let ultimoAuto = -Infinity;
+let modal: HTMLElement | null = null;
+let pausadoPorGlosario = false;
 let revision: number | undefined;
 
+function hayOtraVentanaAbierta(): boolean {
+  return Boolean(document.querySelector(
+    '.dialogo:not([hidden]), dialog[open], .hud-panel-lateral:not([hidden]), .panel-modulo:not([hidden]), .guia:not([hidden]), .reporte:not([hidden])',
+  ));
+}
+
 function cerrar() {
-  if (temporizador !== undefined) window.clearTimeout(temporizador);
-  aviso?.remove();
-  aviso = null;
-  temporizador = undefined;
+  if (!modal) return;
+  modal.remove();
+  modal = null;
+  // La espera hasta el siguiente aviso automático cuenta desde que se cierra este.
+  ultimoAuto = performance.now();
+  if (pausadoPorGlosario) {
+    pausadoPorGlosario = false;
+    if (FASES_DE_JUEGO.has(store.getState().fase)) store.dispatch({ type: 'PAUSAR', pausado: false });
+  }
   programar();
 }
 
-function mostrar(elemento: HTMLElement, termino: Termino) {
-  if (aviso) { window.clearTimeout(temporizador); aviso.remove(); }
+function mostrar(origen: HTMLElement, termino: Termino) {
+  if (modal) cerrar();
   vistos.add(termino);
-  const ventana = document.createElement('div');
-  ventana.className = 'glosario-aviso';
-  if (document.querySelector('.dialogo:not([hidden])')) ventana.classList.add('glosario-aviso--dialogo');
-  ventana.setAttribute('role', 'status');
-  ventana.textContent = t(`glosario.${termino}`);
-  ventana.addEventListener('click', cerrar);
-  (elemento.closest('dialog[open]') ?? document.body).append(ventana);
-  const ancho = ventana.offsetWidth;
-  const alto = ventana.offsetHeight;
-  const obstaculos = Array.from(document.querySelectorAll<HTMLElement>('button:not(.glosario-termino), .dialogo:not([hidden])'))
-    .filter(visible).map((nodo) => nodo.getBoundingClientRect());
-  const candidatos = [
-    [12, innerHeight - alto - 12], [innerWidth - ancho - 12, innerHeight - alto - 12],
-    [12, 12], [innerWidth - ancho - 12, 12],
-    [12, (innerHeight - alto) / 2], [innerWidth - ancho - 12, (innerHeight - alto) / 2],
-  ];
-  const areaSolapada = ([x, y]: number[]) => obstaculos.reduce((area, caja) =>
-    area + Math.max(0, Math.min(x + ancho, caja.right) - Math.max(x, caja.left)) *
-    Math.max(0, Math.min(y + alto, caja.bottom) - Math.max(y, caja.top)), 0);
-  candidatos.sort((a, b) => areaSolapada(a) - areaSolapada(b));
-  ventana.style.left = `${Math.max(0, candidatos[0][0])}px`;
-  ventana.style.top = `${Math.max(0, candidatos[0][1])}px`;
-  ventana.style.bottom = 'auto';
-  ventana.style.transform = 'none';
-  aviso = ventana;
-  temporizador = window.setTimeout(cerrar, 7000);
+
+  // Pausa el juego mientras el niño lee (solo si estaba corriendo).
+  const e = store.getState();
+  if (FASES_DE_JUEGO.has(e.fase) && !e.pausado) {
+    pausadoPorGlosario = true;
+    store.dispatch({ type: 'PAUSAR', pausado: true });
+  }
+
+  const fondo = document.createElement('div');
+  fondo.className = 'glosario-modal';
+  const tarjeta = document.createElement('div');
+  tarjeta.className = 'glosario-tarjeta';
+  tarjeta.setAttribute('role', 'dialog');
+  tarjeta.setAttribute('aria-modal', 'true');
+  tarjeta.setAttribute('aria-labelledby', 'glosario-titulo');
+
+  const icono = document.createElement('div');
+  icono.className = 'glosario-tarjeta__icono';
+  icono.setAttribute('aria-hidden', 'true');
+  icono.textContent = ICONOS[termino];
+  const antetitulo = document.createElement('p');
+  antetitulo.className = 'glosario-tarjeta__antetitulo';
+  antetitulo.textContent = t('glosario.queSignifica');
+  const titulo = document.createElement('h2');
+  titulo.id = 'glosario-titulo';
+  titulo.className = 'glosario-tarjeta__titulo';
+  const palabra = origen.textContent?.trim() || termino;
+  titulo.textContent = palabra.charAt(0).toLocaleUpperCase(getIdioma()) + palabra.slice(1);
+  const texto = document.createElement('p');
+  texto.className = 'glosario-tarjeta__texto';
+  texto.textContent = t(`glosario.${termino}`);
+  const boton = document.createElement('button');
+  boton.type = 'button';
+  boton.className = 'glosario-tarjeta__boton';
+  boton.textContent = t('glosario.entendido');
+  boton.addEventListener('click', cerrar);
+
+  tarjeta.append(icono, antetitulo, titulo, texto, boton);
+  fondo.append(tarjeta);
+  fondo.addEventListener('click', (ev) => { if (ev.target === fondo) cerrar(); });
+  // Dentro de un <dialog> abierto (fuentes, pausa) para quedar por encima de él.
+  (origen.closest('dialog[open]') ?? document.body).append(fondo);
+  modal = fondo;
+  boton.focus();
 }
 
 function marcar(raiz: HTMLElement) {
@@ -72,7 +124,7 @@ function marcar(raiz: HTMLElement) {
   while (caminante.nextNode()) textos.push(caminante.currentNode as Text);
   for (const nodo of textos) {
     const padre = nodo.parentElement;
-    if (!padre || padre.closest('button, a, svg, script, style, .glosario-termino, .glosario-aviso')) continue;
+    if (!padre || padre.closest('button, a, svg, script, style, .glosario-termino, .glosario-modal')) continue;
     const texto = nodo.data;
     const coincidencias: { inicio: number; fin: number; termino: Termino }[] = [];
     for (const [termino, patron] of patrones[getIdioma()]) {
@@ -92,6 +144,7 @@ function marcar(raiz: HTMLElement) {
       const boton = document.createElement('button');
       boton.type = 'button'; boton.className = 'glosario-termino'; boton.dataset.termino = c.termino;
       boton.textContent = texto.slice(c.inicio, c.fin);
+      boton.title = t('glosario.tocaParaVer');
       fragmento.append(boton); posicion = c.fin;
     }
     fragmento.append(document.createTextNode(texto.slice(posicion)));
@@ -109,20 +162,36 @@ function visible(elemento: HTMLElement): boolean {
   return arriba === elemento || elemento.contains(arriba);
 }
 
+function puedeSalirSolo(e: GameState): boolean {
+  return e.fase === 'preparacion' &&
+    !e.pausado &&
+    !e.peticionActiva &&
+    !modal &&
+    autoEnPartida < MAX_AUTO_POR_PARTIDA &&
+    performance.now() - ultimoAuto >= ESPERA_AUTO_MS &&
+    !hayOtraVentanaAbierta();
+}
+
 function revisar() {
   revision = undefined;
   const raiz = document.getElementById('interfaz');
   if (!raiz) return;
   marcar(raiz);
-  if (aviso) return;
+  if (!puedeSalirSolo(store.getState())) return;
   for (const termino of raiz.querySelectorAll<HTMLElement>('.glosario-termino')) {
     const clave = termino.dataset.termino as Termino;
-    if (!vistos.has(clave) && visible(termino)) { mostrar(termino, clave); break; }
+    if (TERMINOS_AUTO.has(clave) && !vistos.has(clave) && visible(termino)) {
+      autoEnPartida++;
+      ultimoAuto = performance.now();
+      mostrar(termino, clave);
+      break;
+    }
   }
 }
 
+// Con temporizador y no requestAnimationFrame: si la pestaña no dibuja, igual se revisa.
 function programar() {
-  if (revision === undefined) revision = window.requestAnimationFrame(revisar);
+  if (revision === undefined) revision = window.setTimeout(revisar, 150);
 }
 
 export function montarGlosario(raiz: HTMLElement) {
@@ -130,10 +199,26 @@ export function montarGlosario(raiz: HTMLElement) {
     const boton = (evento.target as HTMLElement).closest<HTMLElement>('.glosario-termino');
     if (!boton) return;
     evento.stopPropagation();
+    evento.preventDefault();
     mostrar(boton, boton.dataset.termino as Termino);
   }, true);
+  window.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && modal) { ev.stopPropagation(); cerrar(); } }, true);
+
+  // Una partida nueva vuelve a permitir los avisos automáticos.
+  let faseAnterior = store.getState().fase;
+  store.subscribe((e) => {
+    if (e.fase === 'preparacion' && faseAnterior === 'aviso') {
+      autoEnPartida = 0;
+      ultimoAuto = performance.now(); // deja jugar unos segundos antes del primero
+    }
+    if (e.fase === 'aviso' || e.fase === 'reporte') cerrar();
+    faseAnterior = e.fase;
+  });
+
   const observador = new MutationObserver(programar);
   observador.observe(raiz, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden', 'open'] });
   window.addEventListener('scroll', programar, true);
+  // Revisión periódica: la espera entre avisos vence aunque la pantalla no cambie.
+  window.setInterval(programar, 5000);
   programar();
 }

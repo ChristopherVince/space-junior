@@ -1253,3 +1253,128 @@ body {
     transform: translateY(-50%);
   }
 }
+
+/* ══ Ajustes de diseño (menú, contador de tormenta, diálogos de NPC) ══ */
+
+/* Botón Menú: más grande, arriba a la izquierda (donde estaban las vistas 1/2/3) */
+.hud-pausa-btn {
+  top: 18px;
+  left: 18px;
+  gap: 10px;
+  min-height: 54px;
+  padding: 12px 26px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  font-size: 19px;
+  font-weight: 800;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.3);
+}
+.hud-pausa-btn__icono svg { width: 24px; height: 24px; }
+
+/* Contador de tormenta más grande */
+.hud-tormenta {
+  gap: 14px;
+  padding: 16px 30px;
+  font-size: 22px;
+  border-width: 3px;
+}
+.hud-tormenta__icono svg { width: 30px; height: 30px; }
+.hud-tormenta__contenido { gap: 8px; }
+.hud-tormenta__pista { height: 8px; }
+
+/* Diálogo de NPC: centrado, más grande, con el fondo oscurecido */
+.dialogo {
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  padding-top: 8vh;
+  background: rgba(24, 12, 6, 0.6);
+  backdrop-filter: blur(3px);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  animation: dialogo-fondo 0.2s ease-out;
+}
+
+.dialogo__tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  width: min(720px, 100%);
+  padding: 30px 34px;
+  background: linear-gradient(180deg, #fff8ef 0%, #fbe7d4 100%);
+  border: 3px solid #fff3e3;
+  border-radius: 30px;
+  box-shadow: 0 18px 44px rgba(40, 16, 6, 0.45);
+  color: #3f2417;
+  animation: dialogo-entrar 0.35s cubic-bezier(.3, 1.5, .5, 1);
+}
+
+.dialogo__retrato svg { width: 132px; height: 132px; }
+.dialogo__rol { font-size: 22px; }
+.dialogo__medalla { width: 36px; height: 36px; }
+.dialogo__texto { margin: 4px 0 18px; font-size: 21px; line-height: 1.45; }
+.dialogo__btn { padding: 14px 28px; font-size: 18px; }
+
+@keyframes dialogo-fondo { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dialogo-entrar { from { opacity: 0; transform: scale(0.85) translateY(16px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 640px) {
+  .hud-pausa-btn {
+    top: auto;
+    bottom: 14px;
+    left: 12px;
+    min-height: 48px;
+    padding: 10px 20px;
+    font-size: 16px;
+  }
+  .hud-tormenta { font-size: 16px; padding: 10px 18px; }
+  .hud-tormenta__icono svg { width: 22px; height: 22px; }
+  .dialogo { inset: 0; padding: 12px; }
+  .dialogo__tarjeta { flex-direction: column; gap: 12px; padding: 22px 18px; text-align: center; }
+  .dialogo__encabezado { justify-content: center; }
+  .dialogo__acciones { justify-content: center; }
+  .dialogo__retrato svg { width: 96px; height: 96px; }
+  .dialogo__texto { font-size: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialogo, .dialogo__tarjeta { animation: none; }
+}
+
+/* Contador de tormenta centrado debajo de los recursos: más visible y sin tapar el Blindaje */
+@media (min-width: 641px) {
+  .hud-centro { left: 50%; }
+  .hud-derecha-arriba {
+    top: 110px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+  .aviso-tripulacion { top: 210px; }
+}
+
+/* Pantallas medianas: el bloque central baja una fila para no chocar con el botón Menú */
+@media (min-width: 641px) and (max-width: 1200px) {
+  .hud-centro { top: 84px; }
+  .hud-derecha-arriba { top: 176px; }
+  .hud-menu-lateral { top: 180px; }
+  .hud-panel-lateral { top: 180px; }
+  .aviso-tripulacion { top: 270px; }
+}
+
+/* Celular: el bloque de Día + recursos centrado y en dos filas si no cabe */
+@media (max-width: 640px) {
+  .hud-centro {
+    left: 50%;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 6px;
+  }
+  .hud-centro { top: 80px; }
+  .hud-capsula { max-width: 100%; gap: 6px; padding: 8px; box-sizing: border-box; }
+  /* Con el botón Menú más grande, los botones laterales empiezan a su derecha */
+  .hud-menu-lateral { left: 146px; }
+}

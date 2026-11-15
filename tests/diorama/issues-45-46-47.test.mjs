@@ -34,12 +34,11 @@ test('Issue #47: abandonarPartida reinicia el store a aviso y limpia el estado d
   assert.equal( store.getState().fase, 'aviso');
 });
 
-test('Issues #47 y #45: flujo completo de reinicio, tareas y registro de eventos', async () => {
+test('Issues #47 y #45: flujo completo de reinicio y registro de eventos', async () => {
   const entry = `
     export { store, estadoInicial, reducer } from './src/state/store.ts';
     export { iniciarPartida, abandonarPartida } from './src/state/partida.ts';
     export { revisarBots, reiniciarBots } from './src/bots/bots.ts';
-    export { calcularTareas } from './src/ui/hud.ts';
     export { evaluarTransicionRegistro } from './src/ui/registro.ts';
   `;
   const result = await build({
@@ -73,11 +72,7 @@ test('Issues #47 y #45: flujo completo de reinicio, tareas y registro de eventos
   assert.equal(log.length, 1);
   assert.equal(log[0].clave, 'panelLateral.registro.inicio');
 
-  // 2. Tareas en preparación cuando falta energía en invernadero, blindaje y comunicaciones
-  const tareasIniciales = app.calcularTareas(app.store.getState()).map((t) => t.clave);
-  assert.ok(tareasIniciales.includes('panelLateral.tareas.invernadero'));
-  assert.ok(tareasIniciales.includes('panelLateral.tareas.blindaje'));
-  assert.ok(tareasIniciales.includes('panelLateral.tareas.comunicaciones'));
+  // (El panel de Tareas se quitó por decisión del equipo.)
 
   // 3. Petición de bot y resolución aceptada quedan en el registro
   app.revisarBots();
@@ -123,7 +118,6 @@ test('Issues #45 y #46: paridad completa entre es.json y en.json y claves de pau
     'pausa.confirmarNo',
     'panelLateral.cerrar',
     'panelLateral.modulos.titulo',
-    'panelLateral.tareas.titulo',
     'panelLateral.tripulacion.titulo',
     'panelLateral.registro.titulo',
   ];
