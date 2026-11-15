@@ -1,5 +1,6 @@
 // Inicio y reinicio de partidas con un evento real al azar (rejugabilidad).
-// El botón "Jugar otra vez" del reporte (#17) debe llamar a iniciarPartida().
+// El botón "Jugar otra vez" del reporte (#17) y "Abandonar partida" (#47) usan estas funciones.
+import { reiniciarBots } from '../bots/bots';
 import datos from '../data/events.json';
 import { store } from './store';
 
@@ -27,6 +28,7 @@ export function eventoAlAzar(): Evento {
 
 export function iniciarPartida(evento: Evento = eventoAlAzar()) {
   ultimoId = evento.id;
+  reiniciarBots();
   store.dispatch({
     type: 'INICIAR_PARTIDA',
     eventoId: evento.id,
@@ -36,4 +38,9 @@ export function iniciarPartida(evento: Evento = eventoAlAzar()) {
       horasReales: evento.horasReales,
     },
   });
+}
+
+export function abandonarPartida() {
+  reiniciarBots();
+  store.dispatch({ type: 'ABANDONAR_PARTIDA' });
 }

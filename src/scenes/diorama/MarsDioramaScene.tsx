@@ -132,6 +132,7 @@ export function MarsDioramaScene() {
     const desuscribir = store.subscribe((estado) => {
       setModuloActual(estado.tripulacion.comandante.modulo);
       setFase(estado.fase);
+      if (estado.fase === 'aviso') setDestinoTactil(null);
     });
     return () => {
       desuscribir();

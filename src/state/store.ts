@@ -185,6 +185,9 @@ export function reducer(estado: GameState, accion: Action): GameState {
 
     case 'TERMINAR_PARTIDA':
       return { ...estado, fase: 'reporte', motivoFin: accion.motivo };
+
+    case 'ABANDONAR_PARTIDA':
+      return estadoInicial();
   }
 }
 

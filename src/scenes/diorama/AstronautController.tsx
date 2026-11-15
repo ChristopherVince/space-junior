@@ -45,6 +45,19 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
 
   useEffect(() => {
     const actualizarBloqueo = (fase: Phase) => {
+      if (fase === 'aviso') {
+        pos.current = { x: 0.1, z: 0 };
+        posicionRef.current = { x: 0.1, z: 0 };
+        rutaRef.current = [];
+        teclas.current.clear();
+        bloqueadoEnRefugioRef.current = false;
+        setCaminando(false);
+        if (grupo.current) {
+          grupo.current.position.set(0.1, PISO_Y, 0);
+          grupo.current.rotation.y = 0;
+        }
+        return;
+      }
       const transicion = resolverTransicionRefugio(fase, bloqueadoEnRefugioRef.current);
       if (transicion === 'iniciar') {
         bloqueadoEnRefugioRef.current = true;
