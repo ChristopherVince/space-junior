@@ -141,10 +141,11 @@ interface PanelSolarProps {
   posicion?: Vec3;
   inclinacion?: number;
   giro?: number;
+  activa?: boolean;
 }
 
 /** Panel solar inclinado con mástil, marco claro y celdas azules. */
-export function PanelSolar({ posicion = [0, 0, 0], inclinacion = -0.46, giro = 0 }: PanelSolarProps) {
+export function PanelSolar({ posicion = [0, 0, 0], inclinacion = -0.46, giro = 0, activa = false }: PanelSolarProps) {
   return (
     <group position={posicion} rotation-y={giro}>
       <mesh position={[0, 0.36, 0]} castShadow>
@@ -158,12 +159,18 @@ export function PanelSolar({ posicion = [0, 0, 0], inclinacion = -0.46, giro = 0
         </mesh>
         <mesh position={[0, 0.05, 0]}>
           <boxGeometry args={[1.64, 0.03, 1.04]} />
-          <meshStandardMaterial color={PALETA.panelSolar} roughness={0.3} metalness={0.18} />
+          <meshStandardMaterial
+            color={activa ? '#2563eb' : PALETA.panelSolar}
+            emissive={activa ? '#1d4ed8' : '#000000'}
+            emissiveIntensity={activa ? 0.35 : 0}
+            roughness={0.3}
+            metalness={0.18}
+          />
         </mesh>
         {[-0.42, 0, 0.42].map((dx) => (
           <mesh key={dx} position={[dx, 0.074, 0]}>
             <boxGeometry args={[0.024, 0.02, 1.04]} />
-            <meshStandardMaterial color={PALETA.panelSolarBrillo} roughness={0.45} />
+            <meshStandardMaterial color={activa ? '#60a5fa' : PALETA.panelSolarBrillo} roughness={0.45} />
           </mesh>
         ))}
       </group>

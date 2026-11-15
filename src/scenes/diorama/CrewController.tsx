@@ -34,6 +34,12 @@ export function CrewController() {
     medico: null,
     cientifico: null,
   });
+  const alertaRefs = useRef<Record<BotId, THREE.Group | null>>({
+    ingeniero: null,
+    medico: null,
+    cientifico: null,
+  });
+  const tiempoAlertaRef = useRef(0);
 
   const [caminando, setCaminando] = useState<Record<BotId, boolean>>({
     ingeniero: false,
@@ -138,10 +144,15 @@ export function CrewController() {
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
+    tiempoAlertaRef.current += dt;
     let huboCambioCaminando = false;
     const nuevoCaminando: Record<BotId, boolean> = { ...caminando };
 
     for (const b of BOTS_ESCENA) {
+      const alertaGrupo = alertaRefs.current[b.id];
+      if (alertaGrupo) {
+        alertaGrupo.position.set(0, 1.24 + Math.sin(tiempoAlertaRef.current * 5) * 0.08, 0);
+      }
       const st = estadoBots.current[b.id];
       const grupo = gruposRef.current[b.id];
       if (!grupo) continue;
@@ -207,7 +218,12 @@ export function CrewController() {
         >
           <Astronaut caminando={caminando[b.id]} rol={b.id} />
           {botConPeticion === b.id && (
-            <group position={[0, 1.24, 0]}>
+            <group
+              position={[0, 1.24, 0]}
+              ref={(el) => {
+                alertaRefs.current[b.id] = el;
+              }}
+            >
               <mesh position={[0, 0.08, 0]}>
                 <capsuleGeometry args={[0.045, 0.12, 4, 8]} />
                 <meshBasicMaterial color="#facc15" />
