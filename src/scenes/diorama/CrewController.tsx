@@ -1,19 +1,24 @@
 import { useFrame } from '@react-three/fiber';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { store } from '../../state/store';
 import type { CrewId, ModuleId, Phase } from '../../state/types';
-import { calcularRutaFija, type PuntoRuta } from '../rutas';
+import { calcularRutaAlRefugio, resolverTransicionRefugio, type PuntoRuta } from '../rutas';
 import { Astronaut } from './Astronaut';
-import { MODULOS } from './layout';
+import { resolverMovimientoConMuros } from './collision';
 
-const BOTS: { id: Exclude<CrewId, 'comandante'>; moduloBase: keyof typeof MODULOS; offset: [number, number] }[] = [
-  { id: 'ingeniero', moduloBase: 'energia', offset: [-0.45, 0.35] },
-  { id: 'medico', moduloBase: 'enfermeria', offset: [0.45, -0.35] },
-  { id: 'cientifico', moduloBase: 'invernadero', offset: [0.35, 0.45] },
+const BOTS: {
+  id: Exclude<CrewId, 'comandante'>;
+  moduloBase: ModuleId;
+  posicionInicial: [number, number];
+}[] = [
+  { id: 'ingeniero', moduloBase: 'energia', posicionInicial: [3.6, 3.2] },
+  { id: 'medico', moduloBase: 'enfermeria', posicionInicial: [7.6, 3.2] },
+  { id: 'cientifico', moduloBase: 'invernadero', posicionInicial: [-5.5, 0] },
 ];
 
 const VELOCIDAD_BOT = 3.6;
+const RADIO_BOT = 0.26;
 const PISO_Y = 0.15;
 
 interface BotState {
@@ -26,14 +31,16 @@ interface BotState {
 /** Controla a los 3 bots de la tripulación y los lleva al refugio durante alerta/tormenta (Issue #4). */
 export function CrewController() {
   const gruposRef = useRef<Record<string, THREE.Group | null>>({});
+  const [caminandoBots, setCaminandoBots] = useState<Record<string, boolean>>({});
+  const caminandoRef = useRef<Record<string, boolean>>({});
 
   const estadoBots = useRef<Record<string, BotState>>(
     Object.fromEntries(
       BOTS.map((b) => {
-        const [bx, bz] = MODULOS[b.moduloBase].posicion;
+        const [bx, bz] = b.posicionInicial;
         return [
           b.id,
-          { x: bx + b.offset[0], z: bz + b.offset[1], ruta: [], destino: b.moduloBase as ModuleId },
+          { x: bx, z: bz, ruta: [], destino: b.moduloBase },
         ];
       }),
     ),
@@ -41,17 +48,20 @@ export function CrewController() {
 
   useEffect(() => {
     const actualizarDestinos = (fase: Phase) => {
-      const irARefugio = fase === 'refugio' || fase === 'tormenta';
       for (const b of BOTS) {
         const st = estadoBots.current[b.id];
-        const nuevoDestino: ModuleId = irARefugio ? 'refugio' : store.getState().tripulacion[b.id].modulo;
-        if (st.destino !== nuevoDestino) {
-          st.destino = nuevoDestino;
-          st.ruta = calcularRutaFija(st.x, st.z, nuevoDestino);
+        const transicion = resolverTransicionRefugio(fase, st.destino === 'refugio');
+        if (transicion === 'iniciar') {
+          st.destino = 'refugio';
+          st.ruta = calcularRutaAlRefugio(b.id, st.x, st.z);
+        } else if (transicion === 'liberar') {
+          st.ruta = [];
+          st.destino = store.getState().tripulacion[b.id].modulo;
         }
       }
     };
 
+    actualizarDestinos(store.getState().fase);
     const desuscribir = store.subscribe((estado) => {
       actualizarDestinos(estado.fase);
     });
@@ -71,23 +81,34 @@ export function CrewController() {
 
       if (st.ruta.length > 0) {
         const objetivo = st.ruta[0];
-        const tx = objetivo.x + b.offset[0] * 0.5;
-        const tz = objetivo.z + b.offset[1] * 0.5;
-        const rx = tx - st.x;
-        const rz = tz - st.z;
+        const rx = objetivo.x - st.x;
+        const rz = objetivo.z - st.z;
         const dist = Math.hypot(rx, rz);
 
-        if (dist < 0.12) {
+        if (dist < 0.0001) {
           st.ruta.shift();
-          if (st.ruta.length === 0 && store.getState().tripulacion[b.id].modulo !== st.destino) {
+          if (st.ruta.length === 0) {
             store.dispatch({ type: 'MOVER_TRIPULANTE', quien: b.id, modulo: st.destino });
           }
         } else {
           const paso = Math.min(VELOCIDAD_BOT * dt, dist);
-          st.x += (rx / dist) * paso;
-          st.z += (rz / dist) * paso;
+          const siguiente = resolverMovimientoConMuros(
+            st.x,
+            st.z,
+            (rx / dist) * paso,
+            (rz / dist) * paso,
+            RADIO_BOT,
+          );
+          st.x = siguiente.x;
+          st.z = siguiente.z;
           grupo.rotation.y = Math.atan2(rx, rz);
         }
+      }
+
+      const moviendo = st.ruta.length > 0;
+      if (caminandoRef.current[b.id] !== moviendo) {
+        caminandoRef.current[b.id] = moviendo;
+        setCaminandoBots((prev) => ({ ...prev, [b.id]: moviendo }));
       }
 
       grupo.position.set(st.x, PISO_Y, st.z);
@@ -103,7 +124,7 @@ export function CrewController() {
             gruposRef.current[b.id] = el;
           }}
         >
-          <Astronaut caminando={false} rol={b.id} />
+          <Astronaut caminando={Boolean(caminandoBots[b.id])} rol={b.id} />
         </group>
       ))}
     </>
