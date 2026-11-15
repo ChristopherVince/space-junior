@@ -47,5 +47,17 @@
   "panelModulo.disponible": "Available today: {unidades}",
   "panelModulo.quitar": "Remove power",
   "panelModulo.dar": "Add power",
-  "panelModulo.sinEnergia": "No power left today"
+  "panelModulo.sinEnergia": "No power left today",
+  "inicio.antetitulo": "Mars base · Real solar storm",
+  "inicio.titulo": "Space Junior",
+  "inicio.subtitulo": "You are the commander of a base on Mars. A solar storm is coming and the forecast isn't exact. When do you protect your crew?",
+  "inicio.honestidad": "The storm is real: it happened in May 2024 and the Curiosity rover measured it. The crew is imaginary: nobody lives on Mars yet.",
+  "inicio.jugar": "Play",
+  "inicio.comoJugar": "How to play",
+  "inicio.ocultarAyuda": "Hide help",
+  "inicio.idioma": "Language",
+  "inicio.paso1": "Walk around the base and enter each module.",
+  "inicio.paso2": "Share the power: there's never enough for everything.",
+  "inicio.paso3": "Listen to your crew, but you decide.",
+  "inicio.paso4": "When the storm arrives, everyone to the shelter!"
 }
