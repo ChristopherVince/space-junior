@@ -9,6 +9,7 @@ import { montarHud } from './ui/hud';
 import { montarInicio } from './ui/inicio';
 import { montarReporte } from './ui/reporte';
 import { montarFuentes } from './ui/fuentes';
+import { montarGlosario } from './ui/glosario';
 
 const escena = createRoot(document.getElementById('juego')!);
 function renderizarEscena(pausada: boolean) {
@@ -28,6 +29,7 @@ function renderizarEscena(pausada: boolean) {
 renderizarEscena(false);
 
 const interfaz = document.getElementById('interfaz')!;
+montarGlosario(interfaz);
 montarHud(interfaz);
 montarInicio(interfaz);
 montarReporte(interfaz);
