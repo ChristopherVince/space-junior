@@ -11,5 +11,22 @@
   "rol.cientifico": "Science officer (bot)",
   "bot.cientifico.invernadero": "If you cut the greenhouse power, we run out of food tomorrow.",
   "bot.ingeniero.blindaje": "If we don't reinforce the shelter today, there won't be time later.",
-  "bot.medico.dosis": "The crew has already taken a lot of radiation this week."
+  "bot.medico.dosis": "The crew has already taken a lot of radiation this week.",
+  "reporte.titulo": "Mission complete!",
+  "reporte.dosisIntro": "Radiation dose received by your crew in the simulation:",
+  "reporte.dosisTripulante": "{rol}: {dosis} ?Gy ? Curiosity reference: ~{referencia} ?Gy",
+  "reporte.rol.comandante": "Commander",
+  "reporte.rol.ingeniero": "Flight engineer",
+  "reporte.rol.medico": "Medical officer",
+  "reporte.rol.cientifico": "Science officer",
+  "reporte.desconocido": "no data",
+  "reporte.curiosity": "A real solar storm reached Mars on May 20, 2024. Nobody lived there: Curiosity measured a dose that NASA says would have been about 8,100 ?Gy for a person standing next to the rover, equivalent to around 30 chest X-rays. This is a historical reference, not a measurement of your crew.",
+  "reporte.pronostico": "The coronal mass ejection of {fecha} was real. The forecast of its arrival near Earth was off by {horas} hours. This is an Earth observation, not a forecast for Mars.",
+  "reporte.pronosticoNoDisponible": "There is not enough data to compare this event?s forecast.",
+  "reporte.proximaVez": "For your next mission",
+  "reporte.consejo": "One idea to explore: prepare the shielding and get the crew to the shelter early, because storms can arrive sooner than expected.",
+  "reporte.fuentes": "Sources:",
+  "reporte.fuenteCuriosity": "NASA: Curiosity on Mars",
+  "reporte.fuentePronostico": "NASA CCMC: forecast near Earth",
+  "reporte.repetir": "Play again"
 }

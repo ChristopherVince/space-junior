@@ -11,5 +11,22 @@
   "rol.cientifico": "Oficial científica (bot)",
   "bot.cientifico.invernadero": "Si cortas la energía del invernadero, mañana falta comida.",
   "bot.ingeniero.blindaje": "Si no reforzamos el refugio hoy, no da tiempo después.",
-  "bot.medico.dosis": "La tripulación ya lleva mucha dosis esta semana."
+  "bot.medico.dosis": "La tripulación ya lleva mucha dosis esta semana.",
+  "reporte.titulo": "?Misi?n completada!",
+  "reporte.dosisIntro": "Dosis de radiaci?n recibida por tu tripulaci?n en la simulaci?n:",
+  "reporte.dosisTripulante": "{rol}: {dosis} ?Gy ? referencia Curiosity: ~{referencia} ?Gy",
+  "reporte.rol.comandante": "Comandante",
+  "reporte.rol.ingeniero": "Ingenier?a de vuelo",
+  "reporte.rol.medico": "Oficial m?dico",
+  "reporte.rol.cientifico": "Oficial cient?fico",
+  "reporte.desconocido": "sin datos",
+  "reporte.curiosity": "El 20 de mayo de 2024 ocurri? una tormenta solar real en Marte. Nadie viv?a all?: Curiosity midi? una dosis que, seg?n NASA, habr?a sido de unos 8.100 ?Gy para una persona junto al rover, equivalente a unas 30 radiograf?as de t?rax. Esta es una referencia hist?rica, no una medici?n de tu tripulaci?n.",
+  "reporte.pronostico": "La eyecci?n del {fecha} fue real. Para su llegada cerca de la Tierra, el pron?stico se equivoc? por {horas} horas. Es un dato terrestre, no un pron?stico de llegada a Marte.",
+  "reporte.pronosticoNoDisponible": "No hay datos suficientes para comparar el pron?stico de este evento.",
+  "reporte.proximaVez": "Para la pr?xima misi?n",
+  "reporte.consejo": "Una idea para explorar: preparar el blindaje y llevar a la tripulaci?n al refugio con tiempo, porque las tormentas pueden llegar antes de lo previsto.",
+  "reporte.fuentes": "Fuentes:",
+  "reporte.fuenteCuriosity": "NASA: Curiosity en Marte",
+  "reporte.fuentePronostico": "NASA CCMC: pron?stico cerca de la Tierra",
+  "reporte.repetir": "Jugar otra vez"
 }

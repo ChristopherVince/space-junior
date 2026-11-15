@@ -5,6 +5,7 @@ import eventos from './data/events.json';
 import { BaseScene } from './scenes/BaseScene';
 import { store } from './state/store';
 import { montarHud } from './ui/hud';
+import { montarReporte } from './ui/reporte';
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -16,6 +17,7 @@ new Phaser.Game({
 });
 
 montarHud(document.getElementById('interfaz')!);
+montarReporte(document.getElementById('interfaz')!);
 
 const evento = eventos.eventos[0];
 store.dispatch({
