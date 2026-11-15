@@ -158,8 +158,8 @@ test('el resultado final da estrellas y consejos según lo que hizo el jugador',
 test('todos los textos nuevos existen en español e inglés', () => {
   const es = JSON.parse(fs.readFileSync('src/i18n/es.json', 'utf8'));
   const en = JSON.parse(fs.readFileSync('src/i18n/en.json', 'utf8'));
-  const fuentes = ['src/bots/bots.ts', 'src/state/resultado.ts', 'src/ui/reporte.ts'].map((f) => fs.readFileSync(f, 'utf8')).join('\n');
-  const claves = new Set([...fuentes.matchAll(/'((?:bot|reporte)\.[a-zA-Z0-9.]+)'/g)].map((m) => m[1]));
+  const fuentes = ['src/bots/bots.ts', 'src/state/resultado.ts', 'src/ui/reporte.ts', 'src/ui/historia.ts'].map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+  const claves = new Set([...fuentes.matchAll(/'((?:bot|reporte|historia|fin)\.[a-zA-Z0-9.]+)'/g)].map((m) => m[1]));
   for (const n of [1, 2, 3]) claves.add(`reporte.resultado.${n}`);
   for (const clave of claves) {
     if (clave.endsWith('.')) continue;

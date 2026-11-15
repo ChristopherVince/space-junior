@@ -1,0 +1,199 @@
+/* ── Animación "¿Qué pasó en realidad?" ───────────────────── */
+.historia {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px 20px;
+  box-sizing: border-box;
+  background: radial-gradient(120% 90% at 50% 0%, #1b2a48 0%, #0b1426 70%);
+  color: #f5f2ec;
+  font-family: system-ui, sans-serif;
+  overflow-y: auto;
+}
+
+.historia__progreso {
+  display: flex;
+  gap: 5px;
+  width: min(760px, 100%);
+}
+.historia__segmento {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+.historia__segmento-relleno {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: #f9c846;
+}
+
+.historia__lienzo {
+  /* El ancho se limita también por la altura (52vh × 400/240) para no recortar el dibujo. */
+  width: min(760px, 100%, 86.6vh);
+  aspect-ratio: 400 / 240;
+  flex-shrink: 0;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  background: #0b1426;
+}
+.historia__lienzo svg { display: block; width: 100%; height: 100%; }
+
+.historia .historia__titulo {
+  margin: 4px 0 0;
+  font-size: clamp(1.5rem, 4.5vw, 2.2rem);
+  font-weight: 900;
+  text-align: center;
+  color: #ffd56b;
+}
+.historia .historia__texto {
+  width: min(720px, 100%);
+  margin: 0;
+  font-size: clamp(1.1rem, 3vw, 1.45rem);
+  line-height: 1.5;
+  text-align: center;
+  min-height: 4.5em;
+}
+
+.historia__controles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+.historia .historia__btn {
+  min-width: 52px;
+  height: 52px;
+  padding: 0 16px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.historia .historia__btn:hover { background: rgba(255, 255, 255, 0.2); }
+.historia .historia__btn:disabled { opacity: 0.35; cursor: default; }
+.historia__btn:focus-visible { outline: 3px solid #f9c846; outline-offset: 3px; }
+.historia .historia__btn--grande { min-width: 66px; height: 66px; font-size: 26px; background: #f9c846; color: #3f2417; border-color: #fff3c4; }
+.historia .historia__btn--saltar { font-size: 16px; }
+
+/* Entrada de cada escena */
+.historia--entra .historia__lienzo,
+.historia--entra .historia__titulo,
+.historia--entra .historia__texto { animation: h-entrar 0.5s ease-out; }
+.historia--entra .historia__texto { animation-delay: 0.15s; animation-fill-mode: backwards; }
+@keyframes h-entrar { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* Pausa: congela todas las animaciones del dibujo */
+.historia--pausada .historia__lienzo * { animation-play-state: paused !important; }
+
+/* ── Piezas animadas del dibujo ──────────────────────────── */
+.h-estrella { fill: #fff; animation: h-titilar 2.4s ease-in-out infinite; }
+@keyframes h-titilar { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+
+.h-sol .h-rayos { animation: h-girar 14s linear infinite; transform-box: fill-box; transform-origin: center; }
+.h-sol .h-brillo { animation: h-latir 2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes h-girar { to { transform: rotate(360deg); } }
+@keyframes h-latir { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.12); opacity: 1; } }
+
+.h-onda { transform-box: fill-box; transform-origin: center; animation: h-onda 2.4s ease-out infinite; }
+.h-onda--chica { animation-duration: 1.4s; }
+@keyframes h-onda { from { transform: scale(1); opacity: 0.9; } to { transform: scale(2.4); opacity: 0; } }
+
+.h-particula { animation-name: h-volar; animation-timing-function: linear; animation-iteration-count: infinite; }
+@keyframes h-volar { from { transform: translateX(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } to { transform: translateX(var(--h-dx)); opacity: 0; } }
+
+.h-nube { animation: h-nube 7s ease-in-out forwards; }
+@keyframes h-nube { to { transform: translateX(200px) scale(1.4); opacity: 0.4; } }
+
+.h-trazo { animation: h-guiones 1s linear infinite; }
+@keyframes h-guiones { to { stroke-dashoffset: -16; } }
+
+.h-parpadeo { animation: h-titilar 0.8s ease-in-out infinite; }
+.h-aguja { transform-box: fill-box; transform-origin: 50% 95%; animation: h-reloj 2.5s cubic-bezier(.5, 0, .5, 1) infinite alternate; }
+@keyframes h-reloj { from { transform: rotate(-60deg); } to { transform: rotate(80deg); } }
+.h-signo { font-size: 30px; font-weight: 900; fill: #ffd56b; animation: h-titilar 1.2s ease-in-out infinite; }
+
+.h-lluvia { animation: h-lluvia 1.4s linear infinite; }
+@keyframes h-lluvia { from { transform: translate(0, 0); opacity: 0; } 15% { opacity: 1; } to { transform: translate(-30px, 230px); opacity: 0; } }
+.h-rover { animation: h-rodar 6s ease-in-out infinite alternate; }
+@keyframes h-rodar { from { transform: translate(120px, 150px); } to { transform: translate(180px, 150px); } }
+
+.h-curva { fill: none; stroke: #f5a658; stroke-width: 3.5; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: h-dibujar 4s 0.5s ease-out forwards; }
+@keyframes h-dibujar { to { stroke-dashoffset: 0; } }
+
+.h-barra { transform-box: fill-box; transform-origin: left center; transform: scaleX(0); animation: h-crecer 1.2s cubic-bezier(.2, .8, .2, 1) forwards; }
+.h-barra--verde { fill: #7fd0a8; }
+.h-barra--roja { fill: #e24b4a; }
+.h-barra--amarilla { fill: #f9c846; }
+@keyframes h-crecer { to { transform: scaleX(1); } }
+.h-valor { opacity: 0; animation: h-aparecer 0.5s ease-out forwards; }
+@keyframes h-aparecer { to { opacity: 1; } }
+
+.h-escudo { stroke-dasharray: 190; stroke-dashoffset: 190; animation: h-dibujar 2.4s 0.4s ease-out forwards; }
+.h-campo { animation: h-latir-campo 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes h-latir-campo { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.9; } }
+.h-rebote { animation: h-rebote 2.6s ease-in infinite; }
+@keyframes h-rebote { 0% { transform: translate(0, 0); opacity: 0; } 10% { opacity: 1; } 55% { transform: translate(150px, 0); } 100% { transform: translate(110px, -80px); opacity: 0; } }
+
+.h-estrella-final { font-size: 40px; fill: #3a4a60; opacity: 0; animation: h-aparecer 0.5s ease-out forwards; }
+.h-estrella-final--llena { fill: #f9c846; }
+
+.h-etiqueta { fill: #f5f2ec; font-size: 15px; font-weight: 800; font-family: system-ui, sans-serif; }
+.h-etiqueta--verde { fill: #7fd0a8; }
+.h-etiqueta--naranja { fill: #ffb15c; }
+.h-etiqueta--gris { fill: #9fb0c4; font-size: 12px; font-weight: 600; }
+.h-etiqueta--oscura { fill: #5c3a29; }
+
+/* ── Pantalla de fin ─────────────────────────────────────── */
+.historia-fin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  animation: h-entrar 0.6s ease-out;
+}
+.reporte .historia-fin__titulo {
+  margin: 8px 0 0;
+  font-size: clamp(3rem, 12vw, 5rem);
+  font-weight: 900;
+  color: #ffd56b;
+  letter-spacing: 0.04em;
+}
+.reporte .historia-fin__texto { margin: 0; font-size: 1.15rem; }
+.historia-fin__acciones { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 8px 0; }
+.historia-fin__fuentes { font-size: 0.85rem; color: #c9d3e0; }
+.historia-fin__fuentes a { color: #a9dcff; }
+
+/* Movimiento reducido: sin animaciones, todo visible */
+.historia--sin-animacion *, .historia--sin-animacion { animation: none !important; transition: none !important; }
+.historia--sin-animacion .h-barra { transform: none; }
+.historia--sin-animacion .h-valor, .historia--sin-animacion .h-estrella-final { opacity: 1; }
+.historia--sin-animacion .h-curva, .historia--sin-animacion .h-escudo { stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .historia *, .historia-fin { animation: none !important; }
+  .h-barra { transform: none; }
+  .h-valor, .h-estrella-final { opacity: 1; }
+  .h-curva, .h-escudo { stroke-dashoffset: 0; }
+}
+
+@media (max-width: 640px) {
+  .historia { gap: 8px; padding: 12px 10px 14px; }
+  .historia__lienzo { border-radius: 16px; }
+  .historia .historia__btn { min-width: 46px; height: 46px; font-size: 18px; }
+  .historia .historia__btn--grande { min-width: 56px; height: 56px; }
+}
