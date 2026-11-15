@@ -5,7 +5,7 @@ import './fuentes.css';
 const FUENTES = [
   { clave: 'donki', url: 'https://ccmc.gsfc.nasa.gov/tools/DONKI/' },
   { clave: 'scoreboard', url: 'https://ccmc.gsfc.nasa.gov/scoreboards/cme/earth/' },
-  { clave: 'curiosity', url: 'https://www.jpl.nasa.gov/news/nasa-watches-mars-light-up-during-epic-solar-storm/' },
+  { clave: 'curiosity', url: 'https://visualization.osdr.nasa.gov/radlab/gui/knowledgebase/MSL-RAD-Surface' },
   { clave: 'sol', url: 'https://science.nasa.gov/blog/sols-4219-4221-its-a-complex-morning/' },
   { clave: 'chapea', url: 'https://www.nasa.gov/humans-in-space/chapea/about-chapea/' },
 ] as const;
