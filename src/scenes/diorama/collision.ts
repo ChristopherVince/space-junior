@@ -73,7 +73,13 @@ export const MUROS_INTERIORES: readonly CajaColision[] = [
   { x: 5.4, z: 3.4, ancho: G, fondo: 3.1 },
 ];
 
-export const HABITACIONES_Z = [-3.75, -1.25, 1.25, 3.75] as const;
+/**
+ * Centro Z de los cuartos con cama y estante. El cuarto en z = -1.25 es el
+ * refugio blindado: no lleva muebles para que quepa la tripulación completa
+ * (sus puestos están en rutas.ts). Si se le ponen muebles, los bots se atoran.
+ */
+export const REFUGIO_Z = -1.25;
+export const HABITACIONES_Z = [-3.75, 1.25, 3.75] as const;
 
 export const PLANTAS_INVERNADERO: readonly { x: number; z: number }[] = [
   { x: -4.8, z: -3.9 },
@@ -89,7 +95,7 @@ export const SILLAS_COMUNICACIONES_X = [4.7, 6.1, 7.5] as const;
  * mesas, sillas, equipo médico y estaciones de trabajo.
  */
 export const MUEBLES_SOLIDOS: readonly CajaColision[] = [
-  // Camas y estantes en las 4 habitaciones del refugio
+  // Camas y estantes en los 3 dormitorios (el cuarto del refugio queda libre)
   ...HABITACIONES_Z.flatMap((z) => [
     { x: -8.9, z: z - 0.35, ancho: 1.45, fondo: 0.85 },
     { x: -8.6, z: z + 0.88, ancho: 1.1, fondo: 0.42 },
@@ -273,7 +279,11 @@ export function resolverMovimientoConMuros(
   let siguienteX = x;
   let siguienteZ = z;
 
-  const pasos = Math.max(1, Math.ceil(Math.hypot(dx, dz) / (radio * 0.5)));
+  // Pasos de hasta 2·radio: el obstáculo más delgado (muro de 0.16) mide
+  // 0.16 + 2·radio al expandirlo, así que ningún paso puede atravesarlo.
+  // Pasos más finos harían que el personaje se arrime hasta tocar la pared
+  // en lugar de detenerse, y cambiarían el deslizamiento en diagonal.
+  const pasos = Math.max(1, Math.ceil(Math.hypot(dx, dz) / (radio * 2)));
   for (let i = 0; i < pasos; i++) {
     if (!colisionaConMuros(siguienteX + dx / pasos, siguienteZ, radio)) siguienteX += dx / pasos;
     if (!colisionaConMuros(siguienteX, siguienteZ + dz / pasos, radio)) siguienteZ += dz / pasos;
