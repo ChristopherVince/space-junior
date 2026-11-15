@@ -47,21 +47,31 @@ export function evaluarTransicionRegistro(prev: GameState, curr: GameState, list
   // Resolución de petición de un bot
   if (prev.peticionActiva && !curr.peticionActiva && prev.peticionActiva.de !== 'comandante') {
     const bot = prev.peticionActiva.de;
-    const mod = MODULO_DE_BOT[bot];
-    const energiaAntes = prev.energiaAsignada[mod] ?? 0;
-    const energiaDespues = curr.energiaAsignada[mod] ?? 0;
-    const aceptada = energiaDespues > energiaAntes;
+    const mod = prev.peticionActiva.modulo ?? MODULO_DE_BOT[bot];
+    const aceptada = curr.tareaPendiente !== null;
     agregar({
       sol: curr.sol,
       hora: curr.hora,
       clave: aceptada
-        ? 'panelLateral.registro.peticionAceptada'
+        ? 'panelLateral.registro.peticionPendiente'
         : 'panelLateral.registro.peticionRechazada',
       params: {
         quien: `reporte.rol.${bot}`,
         modulo: `modulo.${mod}`,
       },
     });
+  }
+
+  if (prev.tareaPendiente && !curr.tareaPendiente && curr.fase === 'preparacion') {
+    const tarea = prev.tareaPendiente;
+    const completada = (curr.energiaAsignada[tarea.modulo] ?? 0) >= tarea.energiaObjetivo;
+    agregar({ sol: curr.sol, hora: curr.hora,
+      clave: completada ? 'panelLateral.registro.peticionAceptada' : 'panelLateral.registro.tareaCancelada',
+      params: { quien: `reporte.rol.${tarea.de}`, modulo: `modulo.${tarea.modulo}` } });
+  }
+  if (prev.tareaPendiente && !curr.tareaPendiente && curr.fase !== 'preparacion') {
+    agregar({ sol: curr.sol, hora: curr.hora, clave: 'panelLateral.registro.tareaInterrumpida',
+      params: { modulo: `modulo.${prev.tareaPendiente.modulo}` } });
   }
 
   // Cambio de fase a refugio

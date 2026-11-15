@@ -2,7 +2,7 @@
 //
 // Dos formas de hablar:
 // - Peticiones (detienen el reloj): solo cuando hay un problema que el niño PUEDE
-//   resolver dando energía, y aceptar lo resuelve de verdad.
+//   resolver llevando energía al módulo correspondiente.
 // - Avisos (no detienen nada): globos cortos en momentos clave (alerta, tormenta).
 //
 // Reglas para que no aburra:
@@ -52,7 +52,7 @@ const tormentaCerca = (e: GameState) =>
 export interface SituacionPeticion {
   id: string;
   quien: BotId;
-  /** Módulo que recibe 1 unidad de energía si el jugador acepta. */
+  /** Módulo al que debe ir el jugador si acepta. */
   modulo: ModuleId;
   activa: (e: GameState) => boolean;
   /** Frases posibles; cada una se dice como máximo una vez por partida. */
@@ -155,7 +155,7 @@ export function revisarBots() {
   // Una situación que dejó de aplicar puede volver a hablar si regresa.
   for (const s of SITUACIONES) if (!s.activa(e)) situacionesAvisadas.delete(s.id);
 
-  if (e.peticionActiva || e.fase !== 'preparacion') return;
+  if (e.peticionActiva || e.tareaPendiente || e.fase !== 'preparacion') return;
   if (peticionesHechas >= MAX_PETICIONES) return;
   if (e.hora - horaUltimaPeticion < HORAS_ENTRE_PETICIONES) return;
 
