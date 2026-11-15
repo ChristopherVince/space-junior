@@ -67,4 +67,5 @@ export type Action =
   | { type: 'RESOLVER_PETICION'; aceptada: boolean }
   | { type: 'IR_AL_REFUGIO' }
   | { type: 'PAUSAR'; pausado: boolean }
-  | { type: 'TERMINAR_PARTIDA'; motivo: MotivoFin };
+  | { type: 'TERMINAR_PARTIDA'; motivo: MotivoFin }
+  | { type: 'ABANDONAR_PARTIDA' };

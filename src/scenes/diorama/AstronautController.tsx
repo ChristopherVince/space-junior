@@ -36,6 +36,7 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
   const rutaRef = useRef<PuntoRuta[]>([]);
   const teclas = useRef(new Set<string>());
   const bloqueadoEnRefugioRef = useRef(false);
+  const pausadoRef = useRef(Boolean(store.getState().pausado));
   const [caminando, setCaminando] = useState(false);
 
   useEffect(() => {
@@ -44,7 +45,25 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
   }, [destinoTactil]);
 
   useEffect(() => {
-    const actualizarBloqueo = (fase: Phase) => {
+    const actualizarBloqueo = (fase: Phase, pausado: boolean) => {
+      pausadoRef.current = pausado;
+      if (pausado) {
+        teclas.current.clear();
+        setCaminando(false);
+      }
+      if (fase === 'aviso') {
+        pos.current = { x: 0.1, z: 0 };
+        posicionRef.current = { x: 0.1, z: 0 };
+        rutaRef.current = [];
+        teclas.current.clear();
+        bloqueadoEnRefugioRef.current = false;
+        setCaminando(false);
+        if (grupo.current) {
+          grupo.current.position.set(0.1, PISO_Y, 0);
+          grupo.current.rotation.y = 0;
+        }
+        return;
+      }
       const transicion = resolverTransicionRefugio(fase, bloqueadoEnRefugioRef.current);
       if (transicion === 'iniciar') {
         bloqueadoEnRefugioRef.current = true;
@@ -56,8 +75,9 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
       }
     };
 
-    actualizarBloqueo(store.getState().fase);
-    const desuscribir = store.subscribe((estado) => actualizarBloqueo(estado.fase));
+    const inicial = store.getState();
+    actualizarBloqueo(inicial.fase, Boolean(inicial.pausado));
+    const desuscribir = store.subscribe((estado) => actualizarBloqueo(estado.fase, Boolean(estado.pausado)));
     return () => {
       desuscribir();
     };
@@ -67,7 +87,7 @@ export function AstronautController({ destinoTactil, posicionRef }: AstronautCon
     const alPresionar = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(k)) {
-        if (bloqueadoEnRefugioRef.current) return;
+        if (bloqueadoEnRefugioRef.current || pausadoRef.current) return;
         teclas.current.add(k);
       }
     };

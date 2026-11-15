@@ -5,10 +5,10 @@ import { revisarBots } from './bots/bots';
 import { MarsDioramaScene } from './scenes/diorama/MarsDioramaScene';
 import { iniciarReloj } from './state/reloj';
 import { store } from './state/store';
+import { montarFuentes } from './ui/fuentes';
 import { montarHud } from './ui/hud';
 import { montarInicio } from './ui/inicio';
 import { montarReporte } from './ui/reporte';
-import { montarFuentes } from './ui/fuentes';
 
 const escena = createRoot(document.getElementById('juego')!);
 function renderizarEscena(pausada: boolean) {
@@ -27,18 +27,29 @@ function renderizarEscena(pausada: boolean) {
 }
 renderizarEscena(false);
 
-const interfaz = document.getElementById('interfaz')!;
-montarHud(interfaz);
-montarInicio(interfaz);
-montarReporte(interfaz);
-let estabaPausado = false;
-montarFuentes(interfaz, () => {
-  estabaPausado = store.getState().pausado;
-  if (!estabaPausado) store.dispatch({ type: 'PAUSAR', pausado: true });
-  renderizarEscena(true);
-}, () => {
-  if (!estabaPausado) store.dispatch({ type: 'PAUSAR', pausado: false });
-  renderizarEscena(false);
+let ultimoPausado = store.getState().pausado;
+store.subscribe((e) => {
+  if (e.pausado !== ultimoPausado) {
+    ultimoPausado = e.pausado;
+    renderizarEscena(ultimoPausado);
+  }
 });
+
+const interfaz = document.getElementById('interfaz')!;
+let estabaPausadoFuentes = false;
+const controlFuentes = montarFuentes(
+  interfaz,
+  () => {
+    estabaPausadoFuentes = store.getState().pausado;
+    if (!estabaPausadoFuentes) store.dispatch({ type: 'PAUSAR', pausado: true });
+  },
+  () => {
+    if (!estabaPausadoFuentes) store.dispatch({ type: 'PAUSAR', pausado: false });
+  },
+);
+
+montarHud(interfaz, controlFuentes);
+montarInicio(interfaz, controlFuentes);
+montarReporte(interfaz);
 
 iniciarReloj(revisarBots);
