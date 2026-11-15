@@ -2,11 +2,10 @@ import { Canvas } from '@react-three/fiber';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import { revisarBots } from './bots/bots';
-import eventos from './data/events.json';
 import { MarsDioramaScene } from './scenes/diorama/MarsDioramaScene';
 import { iniciarReloj } from './state/reloj';
-import { store } from './state/store';
 import { montarHud } from './ui/hud';
+import { montarInicio } from './ui/inicio';
 
 const juegoRaiz = document.getElementById('juego')!;
 createRoot(juegoRaiz).render(
@@ -21,18 +20,10 @@ createRoot(juegoRaiz).render(
   </Canvas>,
 );
 
-montarHud(document.getElementById('interfaz')!);
-
-const evento = eventos.eventos[0];
-store.dispatch({
-  type: 'INICIAR_PARTIDA',
-  eventoId: evento.id,
-  pronostico: {
-    horasPronosticadas: evento.horasPronosticadas,
-    margenHoras: evento.margenHoras,
-    horasReales: evento.horasReales,
-  },
-});
+const interfaz = document.getElementById('interfaz')!;
+montarHud(interfaz);
+// La partida empieza al pulsar "Jugar" en la pantalla de inicio (evento real al azar).
+montarInicio(interfaz);
 
 iniciarReloj(revisarBots);
 

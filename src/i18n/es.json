@@ -47,5 +47,17 @@
   "panelModulo.disponible": "Disponible hoy: {unidades}",
   "panelModulo.quitar": "Quitar energía",
   "panelModulo.dar": "Dar energía",
-  "panelModulo.sinEnergia": "No queda energía hoy"
+  "panelModulo.sinEnergia": "No queda energía hoy",
+  "inicio.antetitulo": "Base en Marte · Tormenta solar real",
+  "inicio.titulo": "Space Junior",
+  "inicio.subtitulo": "Eres el comandante de una base en Marte. Se acerca una tormenta solar y el aviso no es exacto. ¿Cuándo proteges a tu tripulación?",
+  "inicio.honestidad": "La tormenta es real: ocurrió en mayo de 2024 y la midió el rover Curiosity. La tripulación es imaginaria: todavía nadie vive en Marte.",
+  "inicio.jugar": "Jugar",
+  "inicio.comoJugar": "Cómo jugar",
+  "inicio.ocultarAyuda": "Ocultar ayuda",
+  "inicio.idioma": "Idioma",
+  "inicio.paso1": "Camina por la base y entra a cada módulo.",
+  "inicio.paso2": "Reparte la energía: nunca alcanza para todo.",
+  "inicio.paso3": "Escucha a tu tripulación, pero tú decides.",
+  "inicio.paso4": "Cuando llegue la tormenta, ¡todos al refugio!"
 }
