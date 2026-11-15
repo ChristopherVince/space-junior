@@ -97,10 +97,26 @@ export function colisionaConMuros(x: number, z: number, radio: number): boolean 
   return false;
 }
 
+/** Aplica un desplazamiento X/Z por ejes para conservar el deslizamiento junto a los muros. */
+export function resolverMovimientoConMuros(
+  x: number,
+  z: number,
+  dx: number,
+  dz: number,
+  radio: number,
+): { x: number; z: number } {
+  let siguienteX = x;
+  let siguienteZ = z;
+
+  if (!colisionaConMuros(x + dx, z, radio)) siguienteX += dx;
+  if (!colisionaConMuros(siguienteX, z + dz, radio)) siguienteZ += dz;
+
+  return { x: siguienteX, z: siguienteZ };
+}
+
 export function detectarModulo(x: number, z: number): ModuleId | null {
   const zona = ZONAS_MODULOS.find(
     (m) => x >= m.xMin && x <= m.xMax && z >= m.zMin && z <= m.zMax,
   );
   return zona ? zona.id : null;
 }
-
