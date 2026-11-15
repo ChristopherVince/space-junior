@@ -6,8 +6,9 @@ import { BaseScene } from './scenes/BaseScene';
 import { store } from './state/store';
 import { montarHud } from './ui/hud';
 import { montarReporte } from './ui/reporte';
+import { montarFuentes } from './ui/fuentes';
 
-new Phaser.Game({
+const juego = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'juego',
   width: 960,
@@ -18,6 +19,14 @@ new Phaser.Game({
 
 montarHud(document.getElementById('interfaz')!);
 montarReporte(document.getElementById('interfaz')!);
+let escenaPausadaPorFuentes = false;
+const fuentesAbiertas = montarFuentes(document.getElementById('interfaz')!, () => {
+  escenaPausadaPorFuentes = juego.scene.isActive('BaseScene');
+  if (escenaPausadaPorFuentes) juego.scene.pause('BaseScene');
+}, () => {
+  if (escenaPausadaPorFuentes) juego.scene.resume('BaseScene');
+  escenaPausadaPorFuentes = false;
+});
 
 const evento = eventos.eventos[0];
 store.dispatch({
@@ -32,6 +41,7 @@ store.dispatch({
 
 // TODO(Frente 2): reemplazar por el reloj real del juego (horas por segundo).
 setInterval(() => {
+  if (fuentesAbiertas()) return;
   store.dispatch({ type: 'AVANZAR_HORAS', horas: 1 });
   revisarBots();
 }, 2000);
