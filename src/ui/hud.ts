@@ -3,8 +3,57 @@
 import balance from '../data/balance.json';
 import { t } from '../i18n';
 import { store } from '../state/store';
-import type { GameState } from '../state/types';
+import type { CrewId, GameState } from '../state/types';
 import { montarPanelModulo } from './panelModulo';
+
+type BotId = Exclude<CrewId, 'comandante'>;
+
+const COLOR_BOT: Record<BotId, { primario: string; secundario: string }> = {
+  cientifico: { primario: '#d98a3c', secundario: '#78b856' },
+  ingeniero: { primario: '#e2a32b', secundario: '#4895d9' },
+  medico: { primario: '#d9534f', secundario: '#f08a78' },
+};
+
+const INSIGNIA_BOT: Record<BotId, string> = {
+  cientifico: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff8f0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31l-4.89 8.15A2 2 0 0 0 6.83 20.5h10.34a2 2 0 0 0 1.72-3.04L14 9.31V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>`,
+  ingeniero: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff8f0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+  medico: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff8f0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+};
+
+function retratoBot(quien: BotId): string {
+  const c = COLOR_BOT[quien];
+  return `
+    <svg viewBox="0 0 96 96" width="84" height="84" aria-hidden="true">
+      <defs>
+        <linearGradient id="visor-${quien}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2c4c7e"/>
+          <stop offset="100%" stop-color="#152642"/>
+        </linearGradient>
+      </defs>
+      <!-- Fondo circular suave -->
+      <circle cx="48" cy="48" r="44" fill="#f2d6c1" stroke="#fff8f0" stroke-width="3"/>
+      <!-- Mochila espacial -->
+      <rect x="22" y="42" width="52" height="36" rx="10" fill="#d9cfc5"/>
+      <!-- Orejeras del casco con el color del bot -->
+      <rect x="13" y="34" width="10" height="18" rx="5" fill="${c.primario}"/>
+      <rect x="73" y="34" width="10" height="18" rx="5" fill="${c.primario}"/>
+      <!-- Traje / torso -->
+      <path d="M22 86 C22 66, 74 66, 74 86 Z" fill="#f7f4ef" stroke="#d5c7b8" stroke-width="2"/>
+      <rect x="34" y="70" width="28" height="14" rx="4" fill="${c.secundario}" opacity="0.9"/>
+      <circle cx="48" cy="77" r="3.5" fill="#fff8f0"/>
+      <!-- Casco redondeado -->
+      <rect x="20" y="16" width="56" height="50" rx="25" fill="#fbf9f5" stroke="#ded2c5" stroke-width="2"/>
+      <!-- Franja superior del color del bot -->
+      <path d="M36 17 Q48 14 60 17 L57 24 Q48 22 39 24 Z" fill="${c.primario}"/>
+      <!-- Visor azul espacial -->
+      <rect x="27" y="26" width="42" height="30" rx="15" fill="url(#visor-${quien})" stroke="#d5c7b8" stroke-width="2"/>
+      <!-- Brillo del visor -->
+      <ellipse cx="36" cy="33" rx="6" ry="3" transform="rotate(-18 36 33)" fill="#ffffff" opacity="0.45"/>
+      <!-- Ojos amigables en el visor -->
+      <rect x="37" y="38" width="5" height="9" rx="2.5" fill="#e6f4ff"/>
+      <rect x="54" y="38" width="5" height="9" rx="2.5" fill="#e6f4ff"/>
+    </svg>`;
+}
 
 const UMBRAL_BAJO = 30;
 
@@ -128,13 +177,33 @@ export function montarHud(raiz: HTMLElement) {
       ${menuLateralEstatico()}
     `;
 
-    if (e.peticionActiva) {
+    if (e.peticionActiva && e.peticionActiva.de !== 'comandante') {
+      const quien = e.peticionActiva.de;
+      const color = COLOR_BOT[quien];
       dialogo.hidden = false;
       dialogo.innerHTML = `
-        <b>${t(`rol.${e.peticionActiva.de}`)}</b>
-        <p>${t(e.peticionActiva.textoId)}</p>
-        <button data-r="si">${t('dialogo.aceptar')}</button>
-        <button data-r="no">${t('dialogo.rechazar')}</button>
+        <div class="dialogo__retrato" style="--bot-color:${color.primario}">
+          ${retratoBot(quien)}
+        </div>
+        <div class="dialogo__cuerpo">
+          <div class="dialogo__encabezado">
+            <span class="dialogo__medalla" style="background:${color.primario}">
+              ${INSIGNIA_BOT[quien]}
+            </span>
+            <b class="dialogo__rol">${t(`rol.${quien}`)}</b>
+          </div>
+          <p class="dialogo__texto">${t(e.peticionActiva.textoId)}</p>
+          <div class="dialogo__acciones">
+            <button type="button" class="dialogo__btn dialogo__btn--si" data-r="si">
+              <span class="dialogo__btn-icono" aria-hidden="true">⚡</span>
+              <span>${t('dialogo.aceptar')}</span>
+            </button>
+            <button type="button" class="dialogo__btn dialogo__btn--no" data-r="no">
+              <span class="dialogo__btn-icono" aria-hidden="true">✕</span>
+              <span>${t('dialogo.rechazar')}</span>
+            </button>
+          </div>
+        </div>
       `;
     } else {
       dialogo.hidden = true;
@@ -142,7 +211,8 @@ export function montarHud(raiz: HTMLElement) {
   };
 
   dialogo.addEventListener('click', (ev) => {
-    const r = (ev.target as HTMLElement).dataset.r;
+    const btn = (ev.target as HTMLElement).closest<HTMLElement>('[data-r]');
+    const r = btn?.dataset.r;
     if (r) store.dispatch({ type: 'RESOLVER_PETICION', aceptada: r === 'si' });
   });
 
