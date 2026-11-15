@@ -177,7 +177,12 @@ export function montarHud(raiz: HTMLElement) {
       ${menuLateralEstatico()}
     `;
 
-    if (e.peticionActiva && e.peticionActiva.de !== 'comandante') {
+    const botEnLugarDelComandante =
+      e.peticionActiva &&
+      e.peticionActiva.de !== 'comandante' &&
+      e.tripulacion[e.peticionActiva.de].modulo === e.tripulacion.comandante.modulo;
+
+    if (e.peticionActiva && e.peticionActiva.de !== 'comandante' && botEnLugarDelComandante) {
       const quien = e.peticionActiva.de;
       const color = COLOR_BOT[quien];
       dialogo.hidden = false;
