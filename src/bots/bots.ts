@@ -72,6 +72,14 @@ const indiceFrase: Record<BotId, number> = {
 
 const HORAS_ENTRE_PETICIONES = 2;
 
+export function reiniciarBots() {
+  cursorBot = 0;
+  horaUltimaPeticion = -99;
+  indiceFrase.cientifico = 0;
+  indiceFrase.ingeniero = 0;
+  indiceFrase.medico = 0;
+}
+
 export function revisarBots() {
   const e = store.getState();
   if (e.peticionActiva || e.fase === 'reporte' || e.fase === 'tormenta') return;

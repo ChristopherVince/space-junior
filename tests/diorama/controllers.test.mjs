@@ -83,6 +83,8 @@ for (const inicial of ['preparacion', 'refugio', 'tormenta']) {
       events.get('keydown')?.({ key: 'd' });
       for (const f of h.frames) f({}, 1 / 60);
       assert.ok(posicionRef.current.x > -8.7);
+      fase('aviso');
+      assert.deepEqual(posicionRef.current, { x: 0.1, z: 0 });
     } finally {
       for (const cleanup of cleanups.reverse()) cleanup?.();
       globalThis.window = originalWindow;

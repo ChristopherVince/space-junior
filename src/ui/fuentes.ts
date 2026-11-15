@@ -10,17 +10,18 @@ const FUENTES = [
   { clave: 'chapea', url: 'https://www.nasa.gov/humans-in-space/chapea/about-chapea/' },
 ] as const;
 
-export function montarFuentes(raiz: HTMLElement, alAbrir: () => void, alCerrar: () => void): () => boolean {
+export interface ControlFuentes {
+  abrir: (origen?: HTMLElement | null) => void;
+  estaAbierto: () => boolean;
+}
+
+export function montarFuentes(raiz: HTMLElement, alAbrir: () => void, alCerrar: () => void): ControlFuentes {
   const traducciones: { elemento: HTMLElement; clave: string }[] = [];
   function traducir(elemento: HTMLElement, clave: string) {
     traducciones.push({ elemento, clave });
     elemento.textContent = t(clave);
   }
-  const abrir = document.createElement('button');
-  abrir.type = 'button';
-  abrir.className = 'fuentes-abrir';
-  traducir(abrir, 'fuentes.abrir');
-  abrir.setAttribute('aria-haspopup', 'dialog');
+  let origenFoco: HTMLElement | null = null;
 
   const dialogo = document.createElement('dialog');
   dialogo.className = 'fuentes-dialogo';
@@ -58,7 +59,7 @@ export function montarFuentes(raiz: HTMLElement, alAbrir: () => void, alCerrar: 
   traducir(cerrar, 'fuentes.cerrar');
   cerrar.addEventListener('click', () => dialogo.close());
   dialogo.append(simplificaciones, cerrar);
-  raiz.append(abrir, dialogo);
+  raiz.append(dialogo);
   let idioma = getIdioma();
   store.subscribe(() => {
     if (idioma === getIdioma()) return;
@@ -66,15 +67,21 @@ export function montarFuentes(raiz: HTMLElement, alAbrir: () => void, alCerrar: 
     for (const { elemento, clave } of traducciones) elemento.textContent = t(clave);
   });
 
-  abrir.addEventListener('click', () => {
-    dialogo.showModal();
-    alAbrir();
-    titulo.tabIndex = -1;
-    titulo.focus();
-  });
   dialogo.addEventListener('close', () => {
     alCerrar();
-    abrir.focus();
+    origenFoco?.focus();
+    origenFoco = null;
   });
-  return () => dialogo.open;
+
+  return {
+    abrir(origen?: HTMLElement | null) {
+      if (dialogo.open) return;
+      origenFoco = origen ?? null;
+      dialogo.showModal();
+      alAbrir();
+      titulo.tabIndex = -1;
+      titulo.focus();
+    },
+    estaAbierto: () => dialogo.open,
+  };
 }

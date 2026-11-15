@@ -31,8 +31,8 @@ export function montarPanelModulo(raiz: HTMLElement) {
       avisoSinEnergiaForzado = false;
     }
 
-    // El pasillo central no tiene panel; tampoco se muestra en el reporte final.
-    if (modulo === 'pasillo' || e.fase === 'reporte') {
+    // El pasillo central no tiene panel; tampoco se muestra en la portada ni en el reporte final.
+    if (modulo === 'pasillo' || e.fase === 'reporte' || e.fase === 'aviso') {
       panel.hidden = true;
       return;
     }

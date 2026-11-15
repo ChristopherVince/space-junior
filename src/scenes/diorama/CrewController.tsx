@@ -60,6 +60,25 @@ export function CrewController() {
 
   useEffect(() => {
     const sincronizarConEstado = (estado: GameState) => {
+      if (estado.fase === 'aviso') {
+        setBotConPeticion(null);
+        for (const b of BOTS_ESCENA) {
+          const st = estadoBots.current[b.id];
+          st.x = b.posInicial[0];
+          st.z = b.posInicial[1];
+          st.ruta = [];
+          st.destino = b.moduloBase;
+          st.evacuando = false;
+          const grupo = gruposRef.current[b.id];
+          if (grupo) {
+            grupo.position.set(b.posInicial[0], PISO_Y, b.posInicial[1]);
+            grupo.rotation.y = 0;
+          }
+        }
+        setCaminando({ ingeniero: false, medico: false, cientifico: false });
+        return;
+      }
+
       const alerta = estado.fase === 'refugio' || estado.fase === 'tormenta';
       const peticionDe =
         estado.peticionActiva && estado.peticionActiva.de !== 'comandante'

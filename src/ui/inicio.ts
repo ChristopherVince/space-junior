@@ -1,24 +1,26 @@
-// Pantalla de inicio (#32): título, aclaración honesta de los datos,
-// botones Jugar y Cómo jugar, y selector de idioma.
+// Pantalla de inicio (#32, #46, #47): título, aclaración honesta de los datos,
+// botones Jugar, Cómo jugar y Datos reales de NASA, y selector de idioma.
 // HTML encima del juego, con el mismo estilo cálido que el diálogo de los bots.
 import { getIdioma, setIdioma, t } from '../i18n';
 import { iniciarPartida } from '../state/partida';
 import { store } from '../state/store';
+import type { ControlFuentes } from './fuentes';
 
-export function montarInicio(raiz: HTMLElement) {
+export function montarInicio(raiz: HTMLElement, fuentes?: ControlFuentes) {
   const pantalla = document.createElement('div');
   pantalla.className = 'inicio';
   raiz.append(pantalla);
 
   let mostrarAyuda = false;
+  let ultimaFase = store.getState().fase;
 
   const pintar = () => {
     const idioma = getIdioma();
     pantalla.innerHTML = `
       <div class="inicio__tarjeta" role="dialog" aria-labelledby="inicio-titulo">
         <div class="inicio__idiomas" role="group" aria-label="${t('inicio.idioma')}">
-          <button class="inicio__idioma ${idioma === 'es' ? 'inicio__idioma--activo' : ''}" data-idioma="es" aria-pressed="${idioma === 'es'}">ES</button>
-          <button class="inicio__idioma ${idioma === 'en' ? 'inicio__idioma--activo' : ''}" data-idioma="en" aria-pressed="${idioma === 'en'}">EN</button>
+          <button type="button" class="inicio__idioma ${idioma === 'es' ? 'inicio__idioma--activo' : ''}" data-idioma="es" aria-pressed="${idioma === 'es'}">ES</button>
+          <button type="button" class="inicio__idioma ${idioma === 'en' ? 'inicio__idioma--activo' : ''}" data-idioma="en" aria-pressed="${idioma === 'en'}">EN</button>
         </div>
         <p class="inicio__antetitulo">${t('inicio.antetitulo')}</p>
         <h1 id="inicio-titulo" class="inicio__titulo">${t('inicio.titulo')}</h1>
@@ -35,9 +37,12 @@ export function montarInicio(raiz: HTMLElement) {
             : ''
         }
         <div class="inicio__acciones">
-          <button class="dialogo__btn dialogo__btn--si inicio__jugar" data-accion="jugar">${t('inicio.jugar')}</button>
-          <button class="dialogo__btn dialogo__btn--no" data-accion="ayuda" aria-expanded="${mostrarAyuda}">
+          <button type="button" class="dialogo__btn dialogo__btn--si inicio__jugar" data-accion="jugar">${t('inicio.jugar')}</button>
+          <button type="button" class="dialogo__btn dialogo__btn--no" data-accion="ayuda" aria-expanded="${mostrarAyuda}">
             ${mostrarAyuda ? t('inicio.ocultarAyuda') : t('inicio.comoJugar')}
+          </button>
+          <button type="button" class="dialogo__btn dialogo__btn--no" data-accion="fuentes" aria-haspopup="dialog">
+            ${t('fuentes.abrir')}
           </button>
         </div>
       </div>
@@ -64,11 +69,27 @@ export function montarInicio(raiz: HTMLElement) {
       return;
     }
 
+    if (boton.dataset.accion === 'fuentes') {
+      fuentes?.abrir(boton);
+      return;
+    }
+
     if (boton.dataset.accion === 'jugar') {
       pantalla.hidden = true;
       iniciarPartida();
     }
   });
 
+  store.subscribe((estado) => {
+    const visible = estado.fase === 'aviso';
+    pantalla.hidden = !visible;
+    if (visible && ultimaFase !== 'aviso') {
+      mostrarAyuda = false;
+      pintar();
+    }
+    ultimaFase = estado.fase;
+  });
+
+  pantalla.hidden = store.getState().fase !== 'aviso';
   pintar();
 }

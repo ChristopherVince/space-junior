@@ -1,6 +1,7 @@
 import eventos from '../data/events.json';
 import curiosityDatos from '../data/curiosity_mayo2024.json';
 import { getIdioma, t } from '../i18n';
+import { abandonarPartida } from '../state/partida';
 import { store } from '../state/store';
 import type { CrewId, GameState } from '../state/types';
 import './reporte.css';
@@ -138,7 +139,7 @@ export function montarReporte(raiz: HTMLElement): () => void {
     const boton = document.createElement('button');
     boton.type = 'button';
     boton.textContent = t('reporte.repetir');
-    boton.addEventListener('click', () => window.location.reload());
+    boton.addEventListener('click', () => abandonarPartida());
     panel.append(boton);
     pantalla.append(panel);
     titulo.tabIndex = -1;

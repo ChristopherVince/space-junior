@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { retenerReloj } from '../state/reloj';
 import { store } from '../state/store';
 import type { GameState, ModuleId } from '../state/types';
 import './guia.css';
@@ -45,7 +46,6 @@ export function montarGuia(raiz: HTMLElement): () => void {
 
   let completada = yaCompletada();
   let activa = false;
-  let pausaPropia = false;
   let paso: Paso = 'caminar';
   let anteriorFase = store.getState().fase;
 
@@ -55,17 +55,21 @@ export function montarGuia(raiz: HTMLElement): () => void {
     saltar.textContent = t('guia.saltar');
   }
 
-  function terminar() {
+  // Oculta la guía y suelta el reloj. Solo se marca como completada si el
+  // jugador la terminó o la saltó; si abandona la partida, se repite la próxima vez.
+  function cerrar(marcarCompletada: boolean) {
     if (!activa) return;
     activa = false;
-    completada = true;
-    guardar();
+    if (marcarCompletada) {
+      completada = true;
+      guardar();
+    }
     panel.hidden = true;
     raiz.classList.remove('guia-activa');
     cambiarObjetivo(null);
-    if (pausaPropia) store.dispatch({ type: 'PAUSAR', pausado: false });
-    pausaPropia = false;
+    retenerReloj('guia', false);
   }
+  const terminar = () => cerrar(true);
 
   saltar.addEventListener('click', terminar);
 
@@ -75,16 +79,18 @@ export function montarGuia(raiz: HTMLElement): () => void {
     if (inicio && !completada) {
       activa = true;
       paso = 'caminar';
-      pausaPropia = !e.pausado;
       panel.hidden = false;
       raiz.classList.add('guia-activa');
       cambiarObjetivo('invernadero');
       pintar();
       medir();
-      if (pausaPropia) store.dispatch({ type: 'PAUSAR', pausado: true });
+      // Detiene solo el reloj: con PAUSAR el comandante no podría caminar
+      // y el primer paso de la guía sería imposible.
+      retenerReloj('guia', true);
       return;
     }
     if (!activa) return;
+    if (e.fase === 'aviso') { cerrar(false); return; } // abandonó la partida
     if (e.fase === 'reporte') { terminar(); return; }
     const modulo = e.tripulacion.comandante.modulo;
     if (paso === 'caminar' && modulo === 'invernadero') {
