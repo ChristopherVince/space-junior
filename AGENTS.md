@@ -25,6 +25,9 @@ Este es el repositorio oficial de la entrega, creado el 14 de noviembre de 2026 
 - **Aislamiento por frente**: Modifica únicamente las carpetas de tu frente asignado. Si necesitas cambios en otro frente, coordínalo mediante un issue o PR dedicado.
 - **Internacionalización obligatoria**: Ningún texto visible para el jugador debe ir hardcodeado en el código fuente. Todo texto va en `src/i18n/es.json` y `src/i18n/en.json`.
 - **Integridad de datos científicos**: Datos reales de NASA (DONKI, CME Scoreboard) se descargan con script y se sirven desde JSON local; nunca consultar APIs en vivo durante la demo ni presentar datos históricos como "en vivo". Todo dato de ejemplo lleva `"esEjemplo": true`.
+- **Auditar el código antes de planear o editar**: Leer las líneas reales implicadas (CSS, listeners, `refs` 3D y posicionamientos existentes en `StormEffects.tsx` / `MarsDioramaScene.tsx`) sin asumir comportamientos ni coordenadas.
+- **HUD sin solapamientos ni pérdida de foco**: Verificar siempre las posiciones fijas/absolutas en escritorio y en `@media (max-width: 640px)` para no encimar controles; no reescribir `innerHTML` de botones o modales activos en cada tick del `store` si no cambió el idioma o el estado del menú.
+- **Pausa y reinicio completos en 3D y UI**: Al pausar (`pausado: true`), además de congelar `frameloop`, bloquear/limpiar entradas de teclado (`WASD`/flechas y teclas `1`/`2`/`3`). Al reiniciar a `fase: 'aviso'`, limpiar el estado fuera del store (`reiniciarBots()`, `refs` de posición/ruta en controladores 3D y `destinoTactil`).
 
 ## 3. Buenas Prácticas de Git y Repositorio
 
@@ -40,7 +43,7 @@ Este es el repositorio oficial de la entrega, creado el 14 de noviembre de 2026 
 - Haz commits pequeños, atómicos y enfocados en un solo cambio lógico.
 - Usa mensajes descriptivos en español o siguiendo formato convencional (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`).
 - **Sin etiquetas de IA ni co-autores automáticos**: No incluyas trailers `Co-Authored-By:` de asistentes de IA ni menciones de herramientas generativas en los mensajes de commit.
-- **Verificación previa**: Ejecuta siempre `npm run build` (`tsc && vite build`) antes de hacer commit o push. Si el tipado o el build fallan, no se sube.
+- **Verificación previa**: Ejecuta siempre `npm test` y `npm run build` (`tsc && vite build`) antes de hacer commit o push. Si algún test, el tipado o el build fallan, no se sube.
 
 ### Higiene del repositorio
 
