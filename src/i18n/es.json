@@ -16,6 +16,8 @@
   "hud.menu.tareas": "Tareas",
   "hud.menu.tripulacion": "Tripulación",
   "hud.menu.registro": "Registro",
+  "controles.audioActivar": "Activar sonido",
+  "controles.audioSilenciar": "Silenciar alarma",
   "dialogo.decidir": "Decidir",
   "dialogo.aceptar": "Dar energía",
   "dialogo.rechazar": "Ahora no",

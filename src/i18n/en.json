@@ -16,6 +16,8 @@
   "hud.menu.tareas": "Tasks",
   "hud.menu.tripulacion": "Crew",
   "hud.menu.registro": "Log",
+  "controles.audioActivar": "Turn sound on",
+  "controles.audioSilenciar": "Mute alarm",
   "dialogo.decidir": "Decide",
   "dialogo.aceptar": "Give power",
   "dialogo.rechazar": "Not now",
