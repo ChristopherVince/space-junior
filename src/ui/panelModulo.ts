@@ -1,10 +1,13 @@
 // Frente 3 · Panel de energía al entrar a un módulo (#12).
 // Se muestra cuando el comandante entra a cualquier módulo distinto del pasillo central.
+import balance from '../data/balance.json';
 import { t } from '../i18n';
 import { store } from '../state/store';
-import type { GameState, ModuleId } from '../state/types';
+import type { CrewId, GameState, ModuleId } from '../state/types';
 
 type ModuloConPanel = Exclude<ModuleId, 'pasillo'>;
+const TRIPULACION_IDS: readonly CrewId[] = ['comandante', 'ingeniero', 'medico', 'cientifico'];
+const MODULOS_CON_ENERGIA: ReadonlySet<ModuleId> = new Set(['invernadero', 'energia', 'comunicaciones']);
 
 const ICONOS_MODULO: Record<ModuloConPanel, string> = {
   invernadero: `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8"/><path d="M17 8c0-5-5-5-5-5s0 5 5 5z"/><path d="M7 11c0-5 5-5 5-5s0 5-5 5z"/><path d="M17 14c-4 0-5 3-5 3s1-3-5-3"/></svg>`,
@@ -14,6 +17,23 @@ const ICONOS_MODULO: Record<ModuloConPanel, string> = {
   enfermeria: `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
 };
 
+function textoEfectoModulo(modulo: ModuloConPanel, e: GameState): string {
+  switch (modulo) {
+    case 'invernadero':
+      return t('panelModulo.efecto.invernadero', { pct: balance.invernaderoPorUnidadHora });
+    case 'energia':
+      return t('panelModulo.efecto.energia', { pct: balance.blindajePorUnidadHora });
+    case 'comunicaciones':
+      return t('panelModulo.efecto.comunicaciones', { horas: balance.horasAlertaComunicaciones });
+    case 'refugio': {
+      const dentro = TRIPULACION_IDS.filter((c) => e.tripulacion[c].modulo === 'refugio').length;
+      return t('panelModulo.efecto.refugio', { pct: Math.round(e.recursos.blindaje), dentro });
+    }
+    case 'enfermeria':
+      return t('panelModulo.efecto.enfermeria', { dosis: Math.round(e.tripulacion.comandante.dosis) });
+  }
+}
+
 export function montarPanelModulo(raiz: HTMLElement) {
   const panel = document.createElement('section');
   panel.className = 'panel-modulo';
@@ -21,6 +41,7 @@ export function montarPanelModulo(raiz: HTMLElement) {
   raiz.append(panel);
 
   let avisoSinEnergiaForzado = false;
+  let plegado = false;
   let ultimoModulo: ModuleId = store.getState().tripulacion.comandante.modulo;
   let contenidoAnterior = '';
 
@@ -30,6 +51,7 @@ export function montarPanelModulo(raiz: HTMLElement) {
     if (modulo !== ultimoModulo) {
       ultimoModulo = modulo;
       avisoSinEnergiaForzado = false;
+      plegado = false;
     }
 
     // El pasillo central no tiene panel; tampoco se muestra en la portada ni en el reporte final.
@@ -45,6 +67,7 @@ export function montarPanelModulo(raiz: HTMLElement) {
     // En alerta o tormenta la energía queda congelada (las reglas también lo impiden).
     const bloqueado = e.fase === 'refugio' || e.fase === 'tormenta';
     panel.classList.toggle('panel-modulo--bloqueado', bloqueado);
+    panel.classList.toggle('panel-modulo--plegado', plegado && modulo !== 'pasillo');
     const tarea = e.tareaPendiente;
     const pendiente = tarea ? `<div class="panel-modulo__tarea" role="status">
       <strong>${t('tarea.titulo')}</strong>
@@ -53,6 +76,9 @@ export function montarPanelModulo(raiz: HTMLElement) {
       <button type="button" data-accion="cancelar">${t('tarea.cancelar')}</button>
     </div>` : '';
 
+    const usaEnergia = modulo !== 'pasillo' && (MODULOS_CON_ENERGIA.has(modulo) || actual > 0);
+    const puedeEvacuar = modulo === 'refugio' && e.fase === 'preparacion';
+
     const contenido = `${pendiente}${modulo === 'pasillo' ? '' : `
       <div class="panel-modulo__cabecera">
         <div class="panel-modulo__icono" aria-hidden="true">${ICONOS_MODULO[modulo]}</div>
@@ -60,47 +86,70 @@ export function montarPanelModulo(raiz: HTMLElement) {
           <span class="panel-modulo__subtitulo">${t('panelModulo.subtitulo')}</span>
           <h3 class="panel-modulo__nombre">${t(`modulo.${modulo}`)}</h3>
         </div>
+        <button
+          type="button"
+          class="panel-modulo__plegar"
+          data-accion="plegar"
+          aria-expanded="${!plegado}"
+          aria-label="${plegado ? t('panelModulo.desplegar') : t('panelModulo.plegar')}"
+          title="${plegado ? t('panelModulo.desplegar') : t('panelModulo.plegar')}"
+        >${plegado ? '▾' : '▴'}</button>
       </div>
 
-      <p class="panel-modulo__desc">${t(`panelModulo.desc.${modulo}`)}</p>
+      <div class="panel-modulo__cuerpo">
+        <p class="panel-modulo__desc">${t(`panelModulo.desc.${modulo}`)}</p>
+        <p class="panel-modulo__efecto">${textoEfectoModulo(modulo, e)}</p>
 
-      <div class="panel-modulo__energia-caja">
-        <div class="panel-modulo__energia-info">
-          <span class="panel-modulo__energia-label">${t('panelModulo.energiaModulo')}</span>
-          <span class="panel-modulo__disponible">${t('panelModulo.disponible', { unidades: libre })}</span>
-        </div>
+        ${usaEnergia ? `
+          <div class="panel-modulo__energia-caja">
+            <div class="panel-modulo__energia-info">
+              <span class="panel-modulo__energia-label">${t('panelModulo.energiaModulo')}</span>
+              <span class="panel-modulo__disponible">${t('panelModulo.disponible', { unidades: libre })}</span>
+            </div>
 
-        <div class="panel-modulo__controles">
-          <button
-            type="button"
-            class="panel-modulo__btn panel-modulo__btn--menos"
-            data-accion="menos"
-            aria-label="${t('panelModulo.quitar')}"
-            ${actual <= 0 || bloqueado ? 'disabled' : ''}
-          >−</button>
+            <div class="panel-modulo__controles">
+              <button
+                type="button"
+                class="panel-modulo__btn panel-modulo__btn--menos"
+                data-accion="menos"
+                aria-label="${t('panelModulo.quitar')}"
+                ${actual <= 0 || bloqueado ? 'disabled' : ''}
+              >−</button>
 
-          <div class="panel-modulo__valor" aria-live="polite">
-            <span class="panel-modulo__rayo" aria-hidden="true">⚡</span>
-            <span class="panel-modulo__numero">${actual}</span>
+              <div class="panel-modulo__valor" aria-live="polite">
+                <span class="panel-modulo__rayo" aria-hidden="true">⚡</span>
+                <span class="panel-modulo__numero">${actual}</span>
+              </div>
+
+              <button
+                type="button"
+                class="panel-modulo__btn panel-modulo__btn--mas ${sinEnergia ? 'panel-modulo__btn--agotado' : ''}"
+                data-accion="mas"
+                aria-label="${t('panelModulo.dar')}"
+                ${bloqueado ? 'disabled' : ''}
+              >+</button>
+            </div>
           </div>
+        ` : ''}
 
-          <button
-            type="button"
-            class="panel-modulo__btn panel-modulo__btn--mas ${sinEnergia ? 'panel-modulo__btn--agotado' : ''}"
-            data-accion="mas"
-            aria-label="${t('panelModulo.dar')}"
-            ${bloqueado ? 'disabled' : ''}
-          >+</button>
-        </div>
+        ${puedeEvacuar ? `
+          <div class="panel-modulo__evacuar-caja">
+            <p class="panel-modulo__evacuar-desc">${t('panelModulo.evacuarDesc')}</p>
+            <button type="button" class="panel-modulo__evacuar-btn" data-accion="evacuar">
+              <span aria-hidden="true">🛡️</span>
+              <span>${t('panelModulo.evacuar')}</span>
+            </button>
+          </div>
+        ` : ''}
+
+        ${
+          bloqueado && usaEnergia
+            ? `<div class="panel-modulo__bloqueo" role="status">🔒 ${t('panelModulo.bloqueadoTormenta')}</div>`
+            : usaEnergia && (sinEnergia || avisoSinEnergiaForzado)
+              ? `<div class="panel-modulo__alerta" role="status">${t('panelModulo.sinEnergia')}</div>`
+              : ''
+        }
       </div>
-
-      ${
-        bloqueado
-          ? `<div class="panel-modulo__bloqueo" role="status">🔒 ${t('panelModulo.bloqueadoTormenta')}</div>`
-          : sinEnergia || avisoSinEnergiaForzado
-            ? `<div class="panel-modulo__alerta" role="status">${t('panelModulo.sinEnergia')}</div>`
-            : ''
-      }
     `}`;
     if (contenido !== contenidoAnterior) {
       panel.innerHTML = contenido;
@@ -112,17 +161,27 @@ export function montarPanelModulo(raiz: HTMLElement) {
     const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-accion]');
     if (!btn) return;
 
+    const accion = btn.dataset.accion;
+    if (accion === 'plegar') {
+      plegado = !plegado;
+      pintar(store.getState());
+      return;
+    }
+
     const e = store.getState();
     const modulo = e.tripulacion.comandante.modulo;
     if (e.fase === 'refugio' || e.fase === 'tormenta') return;
-    if (btn.dataset.accion === 'cancelar') {
+    if (accion === 'cancelar') {
       store.dispatch({ type: 'CANCELAR_TAREA' });
+      return;
+    }
+    if (accion === 'evacuar') {
+      store.dispatch({ type: 'IR_AL_REFUGIO' });
       return;
     }
     if (modulo === 'pasillo') return;
 
     const actual = e.energiaAsignada[modulo] ?? 0;
-    const accion = btn.dataset.accion;
 
     if (accion === 'menos' && actual > 0) {
       avisoSinEnergiaForzado = false;

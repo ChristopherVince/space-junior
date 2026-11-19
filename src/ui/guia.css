@@ -33,18 +33,41 @@
 
 @media (max-width: 640px) {
   .guia {
-    left: 10px;
-    bottom: 10px;
-    width: min(340px, calc(100vw - 20px));
-    max-height: 35dvh;
+    left: 8px;
+    right: 8px;
+    bottom: 58px;
+    width: auto;
+    max-height: 26dvh;
     overflow-y: auto;
-    padding: 12px 14px;
-    gap: 8px;
+    padding: 9px 12px;
+    gap: 4px 8px;
+    z-index: 21;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .guia strong {
+    order: 1;
+    font-size: 12px;
+  }
+  .guia > button {
+    order: 2;
+    min-height: 30px;
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+  .guia p {
+    order: 3;
+    flex: 1 1 100%;
+    font-size: 13px;
+    line-height: 1.35;
   }
 
   .guia-activa .panel-modulo {
-    bottom: calc(var(--guia-altura, 170px) + 20px);
-    max-height: max(120px, calc(100dvh - var(--guia-altura, 170px) - 120px));
+    bottom: calc(var(--guia-altura, 96px) + 66px);
+    max-height: max(110px, calc(100dvh - var(--guia-altura, 96px) - 180px));
     box-sizing: border-box;
     overflow-y: auto;
   }

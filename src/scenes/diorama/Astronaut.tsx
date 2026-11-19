@@ -83,6 +83,12 @@ export function Astronaut({ caminando, rol = 'comandante' }: AstronautProps) {
 
   return (
     <group>
+      {/* Sombra de contacto suave bajo el astronauta */}
+      <mesh position={[0, 0.015, 0]} rotation-x={-Math.PI / 2}>
+        <circleGeometry args={[0.28, 18]} />
+        <meshBasicMaterial color="#1e120d" transparent opacity={0.28} depthWrite={false} />
+      </mesh>
+
       {/* Aro identificador en la base */}
       <mesh position={[0, 0.03, 0]} rotation-x={-Math.PI / 2}>
         <torusGeometry args={[0.36, 0.03, 8, 28]} />

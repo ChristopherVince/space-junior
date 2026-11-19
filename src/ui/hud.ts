@@ -133,18 +133,29 @@ function actualizarChipDom(refs: ChipRefs, labelKey: string, pct: number) {
 
 function renderizarContenidoPanel(panel: PanelLateralId, e: GameState): { titulo: string; cuerpo: string } {
   if (panel === 'modulos') {
+    const bloqueadoMovimiento = e.fase === 'refugio' || e.fase === 'tormenta';
+    const moduloComandante = e.tripulacion.comandante.modulo;
     const items = MODULOS_ORDEN.map((id) => {
       const unidades = e.energiaAsignada[id] ?? 0;
       const esPasillo = id === 'pasillo';
+      const aqui = moduloComandante === id;
       return `
-        <li class="hud-panel__item">
+        <li class="hud-panel__item ${aqui ? 'hud-panel__item--actual' : ''}">
           <div class="hud-panel__item-cabecera">
             <strong>${t(`modulo.${id}`)}</strong>
-            ${
-              esPasillo
-                ? ''
-                : `<span class="hud-panel__badge">⚡ ${t('panelLateral.modulos.energia', { unidades })}</span>`
-            }
+            <div class="hud-panel__badges">
+              ${
+                esPasillo
+                  ? ''
+                  : `<span class="hud-panel__badge">⚡ ${t('panelLateral.modulos.energia', { unidades })}</span>`
+              }
+              <button
+                type="button"
+                class="hud-panel__ir-btn ${aqui ? 'hud-panel__ir-btn--aqui' : ''}"
+                data-ir-modulo="${id}"
+                ${aqui || bloqueadoMovimiento ? 'disabled' : ''}
+              >${aqui ? t('panelLateral.modulos.aqui') : `🚶 ${t('panelLateral.modulos.ir')}`}</button>
+            </div>
           </div>
           <p class="hud-panel__item-desc">${t(`panelModulo.desc.${id}`)}</p>
         </li>`;
@@ -267,7 +278,11 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
   modalPausa.className = 'pausa-dialogo';
   modalPausa.setAttribute('aria-labelledby', 'pausa-titulo');
 
-  hud.append(hudEstado, btnPausa, menuLateral, backdropPanel, panelLateral);
+  const selectorVistas = document.createElement('div');
+  selectorVistas.className = 'hud-vistas';
+  selectorVistas.setAttribute('role', 'group');
+
+  hud.append(hudEstado, btnPausa, selectorVistas, menuLateral, backdropPanel, panelLateral);
   raiz.append(hud, dialogo, modalPausa);
   montarPanelModulo(raiz);
 
@@ -277,8 +292,23 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
   let confirmandoAbandono = false;
   let ultimoIdiomaHud = '';
   let ultimoPanelPintado: PanelLateralId | null | undefined = undefined;
+  let ultimoHtmlPanelLateral = '';
+  let vistaActual: '1' | '2' | '3' = '1';
+  let ultimaVistaPintada = '';
   let pausadoPorDialogo = false;
   let contenidoDialogo = '';
+
+  const pintarVistas = () => {
+    ultimaVistaPintada = vistaActual;
+    selectorVistas.setAttribute('aria-label', t('controles.vistasGrupo'));
+    const vistas: ('1' | '2' | '3')[] = ['1', '2', '3'];
+    selectorVistas.innerHTML = vistas
+      .map((v) => {
+        const activa = vistaActual === v;
+        return `<button type="button" class="hud-vista-btn ${activa ? 'hud-vista-btn--activo' : ''}" data-vista="${v}" aria-pressed="${activa}" aria-label="${t('controles.vista', { numero: v })} (${t(`controles.vista.${v}`)})">${v} · ${t(`controles.vista.${v}`)}</button>`;
+      })
+      .join('');
+  };
 
   const pintarMenuLateral = () => {
     ultimoPanelPintado = panelActivo;
@@ -309,12 +339,13 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
     if (!panelActivo) {
       panelLateral.hidden = true;
       backdropPanel.hidden = true;
+      ultimoHtmlPanelLateral = '';
       return;
     }
     panelLateral.hidden = false;
     backdropPanel.hidden = false;
     const { titulo, cuerpo } = renderizarContenidoPanel(panelActivo, e);
-    panelLateral.innerHTML = `
+    const html = `
       <div class="hud-panel__cabecera">
         <h2 id="hud-panel-titulo" class="hud-panel__titulo">${titulo}</h2>
         <button type="button" class="hud-panel__cerrar" data-cerrar-panel="1" aria-label="${t('panelLateral.cerrar')}">✕</button>
@@ -323,6 +354,10 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
         ${cuerpo}
       </div>
     `;
+    if (html !== ultimoHtmlPanelLateral) {
+      panelLateral.innerHTML = html;
+      ultimoHtmlPanelLateral = html;
+    }
   };
 
   const cerrarPanelLateral = (restaurarPausa = true) => {
@@ -432,8 +467,37 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
   });
 
   panelLateral.addEventListener('click', (ev) => {
-    const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-cerrar-panel]');
-    if (btn) cerrarPanelLateral(true);
+    const target = ev.target as HTMLElement;
+    const btnCerrar = target.closest<HTMLButtonElement>('button[data-cerrar-panel]');
+    if (btnCerrar) {
+      cerrarPanelLateral(true);
+      return;
+    }
+    const btnIr = target.closest<HTMLButtonElement>('button[data-ir-modulo]');
+    if (btnIr && !btnIr.disabled) {
+      const modulo = btnIr.dataset.irModulo as ModuleId | undefined;
+      if (modulo) {
+        cerrarPanelLateral(true);
+        window.dispatchEvent(new CustomEvent('space-junior:ir-modulo', { detail: modulo }));
+      }
+    }
+  });
+
+  selectorVistas.addEventListener('click', (ev) => {
+    const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-vista]');
+    const v = btn?.dataset.vista as '1' | '2' | '3' | undefined;
+    if (!v) return;
+    vistaActual = v;
+    pintarVistas();
+    window.dispatchEvent(new CustomEvent('space-junior:vista', { detail: v }));
+  });
+
+  window.addEventListener('space-junior:vista-actual', (ev) => {
+    const v = (ev as CustomEvent<'1' | '2' | '3'>).detail;
+    if (v && v !== vistaActual) {
+      vistaActual = v;
+      pintarVistas();
+    }
   });
 
   backdropPanel.addEventListener('click', () => cerrarPanelLateral(true));
@@ -501,6 +565,9 @@ export function montarHud(raiz: HTMLElement, fuentes?: ControlFuentes) {
 
     if (idiomaCambio || panelActivo !== ultimoPanelPintado) {
       pintarMenuLateral();
+    }
+    if (idiomaCambio || vistaActual !== ultimaVistaPintada) {
+      pintarVistas();
     }
     if (panelActivo) pintarPanelLateral(e);
     if (modalPausa.open && idiomaCambio) pintarModalPausa();

@@ -1,8 +1,12 @@
+import { useFrame } from '@react-three/fiber';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { store } from '../../state/store';
 import {
   HABITACIONES_Z,
   MUROS_INTERIORES,
   PLANTAS_INVERNADERO,
+  REFUGIO_Z,
   SILLAS_COMUNICACIONES_X,
 } from './collision';
 import { PALETA } from './palette';
@@ -27,20 +31,20 @@ function Muro({ x, z, ancho, fondo, alto = ALTURA_MURO, color = PALETA.muroCalid
   );
 }
 
-/** Muro exterior con textura ondulada impresa en 3D, igual al contorno de Mars Dune Alpha. */
+/** Muro exterior con textura ondulada impresa en 3D en tono regolito, fiel a Mars Dune Alpha. */
 function MuroOnduladoHorizontal({ x0, x1, z }: { x0: number; x1: number; z: number }) {
   const largo = x1 - x0;
   const cx = (x0 + x1) / 2;
   const cantidad = Math.max(1, Math.floor(largo / 0.72));
   return (
     <group>
-      <Muro x={cx} z={z} ancho={largo} fondo={0.2} color="#aeb6be" />
+      <Muro x={cx} z={z} ancho={largo} fondo={0.2} color="#b88267" />
       {Array.from({ length: cantidad }, (_, i) => {
         const px = x0 + (i + 0.5) * (largo / cantidad);
         return (
           <mesh key={px} position={[px, 0.14 + ALTURA_MURO / 2, z]} castShadow receiveShadow>
             <cylinderGeometry args={[0.14, 0.15, ALTURA_MURO, 8]} />
-            <meshStandardMaterial color="#9da6af" roughness={0.9} flatShading />
+            <meshStandardMaterial color="#a46d52" roughness={0.9} flatShading />
           </mesh>
         );
       })}
@@ -54,13 +58,13 @@ function MuroOnduladoVertical({ x, z0, z1 }: { x: number; z0: number; z1: number
   const cantidad = Math.max(1, Math.floor(largo / 0.72));
   return (
     <group>
-      <Muro x={x} z={cz} ancho={0.2} fondo={largo} color="#aeb6be" />
+      <Muro x={x} z={cz} ancho={0.2} fondo={largo} color="#b88267" />
       {Array.from({ length: cantidad }, (_, i) => {
         const pz = z0 + (i + 0.5) * (largo / cantidad);
         return (
           <mesh key={pz} position={[x, 0.14 + ALTURA_MURO / 2, pz]} castShadow receiveShadow>
             <cylinderGeometry args={[0.14, 0.15, ALTURA_MURO, 8]} />
-            <meshStandardMaterial color="#9da6af" roughness={0.9} flatShading />
+            <meshStandardMaterial color="#a46d52" roughness={0.9} flatShading />
           </mesh>
         );
       })}
@@ -115,7 +119,7 @@ function Cama({ x, z }: { x: number; z: number }) {
   );
 }
 
-function Planta({ x, z }: { x: number; z: number }) {
+function Planta({ x, z, activa }: { x: number; z: number; activa: boolean }) {
   return (
     <group position={[x, 0.15, z]}>
       <mesh position={[0, 0.14, 0]} castShadow receiveShadow>
@@ -125,9 +129,103 @@ function Planta({ x, z }: { x: number; z: number }) {
       {[-0.24, 0, 0.24].map((ox) => (
         <mesh key={ox} position={[ox, 0.36, 0]} castShadow>
           <dodecahedronGeometry args={[0.16, 0]} />
-          <meshStandardMaterial color={PALETA.cultivo} roughness={0.82} flatShading />
+          <meshStandardMaterial
+            color={activa ? '#58b957' : '#6f856b'}
+            emissive={activa ? '#16a34a' : '#000000'}
+            emissiveIntensity={activa ? 0.22 : 0}
+            roughness={0.82}
+            flatShading
+          />
         </mesh>
       ))}
+      {/* Arco con tira LED de cultivo */}
+      {[-0.4, 0.4].map((ox) => (
+        <mesh key={ox} position={[ox, 0.46, 0]} castShadow>
+          <cylinderGeometry args={[0.02, 0.02, 0.42, 6]} />
+          <meshStandardMaterial color={PALETA.metalOscuro} roughness={0.6} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.67, 0]}>
+        <boxGeometry args={[0.84, 0.04, 0.12]} />
+        <meshStandardMaterial
+          color={activa ? '#bbf7d0' : '#475569'}
+          emissive={activa ? '#4ade80' : '#000000'}
+          emissiveIntensity={activa ? 1.15 : 0}
+          roughness={0.35}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function ProyectorComms({ activo }: { activo: boolean }) {
+  const anilloRef = useRef<THREE.Mesh>(null);
+  useFrame((_, delta) => {
+    if (!anilloRef.current) return;
+    if (activo) {
+      anilloRef.current.rotation.y += delta * 1.6;
+      anilloRef.current.rotation.x = Math.PI / 3;
+    }
+  });
+
+  return (
+    <group position={[6.1, 0.56, 0]}>
+      <mesh position={[0, 0.03, 0]} castShadow>
+        <cylinderGeometry args={[0.26, 0.32, 0.06, 12]} />
+        <meshStandardMaterial color={PALETA.metalOscuro} roughness={0.5} metalness={0.35} />
+      </mesh>
+      <mesh ref={anilloRef} position={[0, 0.28, 0]} rotation={[Math.PI / 3, 0, 0]}>
+        <torusGeometry args={[0.22, 0.025, 8, 24]} />
+        <meshStandardMaterial
+          color={activo ? '#7dd3fc' : '#475569'}
+          emissive={activo ? '#0ea5e9' : '#000000'}
+          emissiveIntensity={activo ? 1.2 : 0}
+          roughness={0.3}
+        />
+      </mesh>
+      <mesh position={[0, 0.28, 0]}>
+        <octahedronGeometry args={[0.1, 0]} />
+        <meshStandardMaterial
+          color={activo ? '#bae6fd' : '#334155'}
+          emissive={activo ? '#38bdf8' : '#000000'}
+          emissiveIntensity={activo ? 1.3 : 0}
+          roughness={0.25}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function EscudoRefugio({ blindajePct, enAlerta }: { blindajePct: number; enAlerta: boolean }) {
+  const proporcion = Math.max(0.02, Math.min(1, blindajePct / 100));
+  const color = enAlerta ? '#22c55e' : '#38bdf8';
+  const opacidad = blindajePct > 0 ? 0.22 + proporcion * 0.65 : 0.14;
+
+  return (
+    <group position={[-8.1, 0, REFUGIO_Z]}>
+      {/* Marco luminoso en el piso del cuarto blindado */}
+      <mesh position={[0, 0.165, -0.95]} rotation-x={-Math.PI / 2}>
+        <planeGeometry args={[3.1, 0.09]} />
+        <meshBasicMaterial color={color} transparent opacity={opacidad} depthWrite={false} />
+      </mesh>
+      <mesh position={[0, 0.165, 0.95]} rotation-x={-Math.PI / 2}>
+        <planeGeometry args={[3.1, 0.09]} />
+        <meshBasicMaterial color={color} transparent opacity={opacidad} depthWrite={false} />
+      </mesh>
+      {/* Barra indicadora del escudo en la pared oeste */}
+      <mesh position={[-1.74, 0.78, 0]}>
+        <boxGeometry args={[0.05, 0.34, 1.3]} />
+        <meshStandardMaterial color="#1e293b" roughness={0.6} />
+      </mesh>
+      <mesh position={[-1.71, 0.78, -0.58 * (1 - proporcion)]} scale={[1, 1, proporcion]}>
+        <boxGeometry args={[0.03, 0.16, 1.16]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={blindajePct > 0 ? 1.1 : 0.15}
+          roughness={0.3}
+        />
+      </mesh>
     </group>
   );
 }
@@ -147,6 +245,38 @@ function Silla({ x, z }: { x: number; z: number }) {
  * y muros/muebles sincronizados con las cajas sólidas de collision.ts.
  */
 export function MarsDuneAlphaMap() {
+  const [visual, setVisual] = useState(() => {
+    const e = store.getState();
+    return {
+      invActiva: (e.energiaAsignada.invernadero ?? 0) > 0 && e.fase !== 'tormenta' && e.fase !== 'refugio',
+      comActiva: (e.energiaAsignada.comunicaciones ?? 0) > 0,
+      blindajePct: Math.round(e.recursos.blindaje),
+      enAlerta: e.fase === 'refugio' || e.fase === 'tormenta',
+    };
+  });
+
+  useEffect(() => {
+    const desuscribir = store.subscribe((e) => {
+      const siguiente = {
+        invActiva: (e.energiaAsignada.invernadero ?? 0) > 0 && e.fase !== 'tormenta' && e.fase !== 'refugio',
+        comActiva: (e.energiaAsignada.comunicaciones ?? 0) > 0,
+        blindajePct: Math.round(e.recursos.blindaje),
+        enAlerta: e.fase === 'refugio' || e.fase === 'tormenta',
+      };
+      setVisual((prev) =>
+        prev.invActiva === siguiente.invActiva &&
+        prev.comActiva === siguiente.comActiva &&
+        prev.blindajePct === siguiente.blindajePct &&
+        prev.enAlerta === siguiente.enAlerta
+          ? prev
+          : siguiente,
+      );
+    });
+    return () => {
+      desuscribir();
+    };
+  }, []);
+
   return (
     <group>
       {/* Losa de cimentación general de cemento */}
@@ -192,8 +322,9 @@ export function MarsDuneAlphaMap() {
       <Estante x={-4.4} z={-4.65} ancho={2.4} fondo={0.45} />
       <Estante x={-4.4} z={4.65} ancho={2.4} fondo={0.45} />
       {PLANTAS_INVERNADERO.map((p, i) => (
-        <Planta key={i} x={p.x} z={p.z} />
+        <Planta key={i} x={p.x} z={p.z} activa={visual.invActiva} />
       ))}
+      <EscudoRefugio blindajePct={visual.blindajePct} enAlerta={visual.enAlerta} />
 
       {/* WC y Ducha centrales */}
       <mesh position={[-3.3, 0.35, -1.5]} castShadow>
@@ -252,8 +383,15 @@ export function MarsDuneAlphaMap() {
       ))}
       <mesh position={[6.1, 0.78, -1.25]} castShadow>
         <boxGeometry args={[0.8, 0.45, 0.1]} />
-        <meshStandardMaterial color="#4a7096" roughness={0.4} flatShading />
+        <meshStandardMaterial
+          color={visual.comActiva ? '#38bdf8' : '#1e293b'}
+          emissive={visual.comActiva ? '#0284c7' : '#000000'}
+          emissiveIntensity={visual.comActiva ? 0.75 : 0}
+          roughness={0.35}
+          flatShading
+        />
       </mesh>
+      <ProyectorComms activo={visual.comActiva} />
       <Estante x={2.45} z={-0.95} ancho={0.8} fondo={0.7} />
 
       {/* Estación de robótica / Energía */}

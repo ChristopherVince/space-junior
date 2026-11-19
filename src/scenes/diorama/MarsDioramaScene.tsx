@@ -1,6 +1,6 @@
 import { Html, OrbitControls } from '@react-three/drei';
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from 'react';
 import * as THREE from 'three';
 import { store } from '../../state/store';
 import { getIdioma, t } from '../../i18n';
@@ -34,13 +34,73 @@ function CamaraIsometrica() {
   const tamano = useThree((estado) => estado.size);
 
   useEffect(() => {
-    const calculado = Math.min(
-      Math.max(Math.min(tamano.width / 30.4, tamano.height / 20), ZOOM_MIN),
-      ZOOM_MAX,
-    );
+    const esMovil = tamano.width < 640;
+    const zoomObjetivo = esMovil
+      ? Math.min(tamano.width / 23.5, tamano.height / 18.5)
+      : Math.min(tamano.width / 30.4, tamano.height / 20);
+    const calculado = Math.min(Math.max(zoomObjetivo, ZOOM_MIN), ZOOM_MAX);
     camara.zoom = calculado;
     camara.updateProjectionMatrix();
   }, [camara, tamano]);
+
+  return null;
+}
+
+function TransicionCamara({
+  vista,
+  controlsRef,
+  animandoRef,
+}: {
+  vista: VistaId;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  controlsRef: RefObject<any>;
+  animandoRef: MutableRefObject<boolean>;
+}) {
+  const camara = useThree((estado) => estado.camera);
+  const posObjetivo = useRef(new THREE.Vector3(...VISTAS['1'].posicion));
+  const targetObjetivo = useRef(new THREE.Vector3(...VISTAS['1'].target));
+  const primerMontaje = useRef(true);
+
+  useEffect(() => {
+    const config = VISTAS[vista];
+    posObjetivo.current.set(...config.posicion);
+    targetObjetivo.current.set(...config.target);
+    window.dispatchEvent(new CustomEvent('space-junior:vista-actual', { detail: vista }));
+
+    if (primerMontaje.current) {
+      primerMontaje.current = false;
+      camara.position.copy(posObjetivo.current);
+      if (controlsRef.current) {
+        controlsRef.current.target.copy(targetObjetivo.current);
+        controlsRef.current.update();
+      }
+      return;
+    }
+
+    animandoRef.current = true;
+  }, [vista, camara, controlsRef, animandoRef]);
+
+  useFrame((_, delta) => {
+    if (!animandoRef.current) return;
+    const factor = Math.min(1, delta * 9);
+    camara.position.lerp(posObjetivo.current, factor);
+    if (controlsRef.current) {
+      controlsRef.current.target.lerp(targetObjetivo.current, factor);
+      controlsRef.current.update();
+    }
+    const distPos = camara.position.distanceToSquared(posObjetivo.current);
+    const distTarget = controlsRef.current
+      ? controlsRef.current.target.distanceToSquared(targetObjetivo.current)
+      : 0;
+    if (distPos < 0.002 && distTarget < 0.002) {
+      camara.position.copy(posObjetivo.current);
+      if (controlsRef.current) {
+        controlsRef.current.target.copy(targetObjetivo.current);
+        controlsRef.current.update();
+      }
+      animandoRef.current = false;
+    }
+  });
 
   return null;
 }
@@ -115,6 +175,7 @@ interface ZonaInteractivaProps {
   moduloActual: ModuleId;
   hoverModulo: ModuleId | null;
   esObjetivo: boolean;
+  energiaAsignada: number;
   fallaTexto: string | null;
   idioma: ReturnType<typeof getIdioma>;
   onSelect: (id: ModuleId) => void;
@@ -162,11 +223,13 @@ function ZonaInteractivaModulo({
   moduloActual,
   hoverModulo,
   esObjetivo,
+  energiaAsignada,
   fallaTexto,
   onSelect,
   onHover,
 }: ZonaInteractivaProps) {
   const matPisoRef = useRef<THREE.MeshBasicMaterial>(null);
+  const coneObjetivoRef = useRef<THREE.Mesh>(null);
   const esRefugio = zona.id === 'refugio';
   const enAlertaRefugio = esRefugio && (fase === 'refugio' || fase === 'tormenta');
   const tieneFalla = Boolean(fallaTexto);
@@ -206,7 +269,11 @@ function ZonaInteractivaModulo({
         ? 0.68
         : 0.48;
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
+    if (coneObjetivoRef.current) {
+      coneObjetivoRef.current.position.y = 3.5 + Math.sin(clock.elapsedTime * 4) * 0.2;
+      coneObjetivoRef.current.rotation.y += delta * 1.4;
+    }
     if (!matPisoRef.current) return;
     if (enAlertaRefugio) {
       const pulso = 0.5 + 0.5 * Math.sin(clock.elapsedTime * 6);
@@ -268,7 +335,7 @@ function ZonaInteractivaModulo({
 
       {/* Indicador visual del objetivo de la guía del primer sol */}
       {esObjetivo && (
-        <mesh position={[0, 3.5, 0]} rotation={[Math.PI, 0, 0]}>
+        <mesh ref={coneObjetivoRef} position={[0, 3.5, 0]} rotation={[Math.PI, 0, 0]}>
           <coneGeometry args={[0.45, 0.9, 4]} />
           <meshBasicMaterial color="#fbbf24" depthTest={false} />
         </mesh>
@@ -301,6 +368,11 @@ function ZonaInteractivaModulo({
                 {zona.icono}
               </span>
               <span className="etiqueta-modulo__texto">{t(`modulo.${zona.id}`)}</span>
+              {energiaAsignada > 0 && zona.id !== 'pasillo' && (
+                <span className="etiqueta-modulo__energia" aria-hidden="true">
+                  ⚡{energiaAsignada}
+                </span>
+              )}
             </button>
           </div>
         </Html>
@@ -311,7 +383,7 @@ function ZonaInteractivaModulo({
         position={[0, 0.2, 0]}
         onClick={(e: ThreeEvent<MouseEvent>) => {
           e.stopPropagation();
-          if (e.delta > 6) return;
+          if (e.delta > 12) return;
           onSelect(zona.id);
         }}
         onPointerOver={(e) => {
@@ -336,7 +408,9 @@ export function MarsDioramaScene() {
   const posicionJugadorRef = useRef({ x: 0.1, z: 0 });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
-  const camara = useThree((estado) => estado.camera);
+  const animandoCamaraRef = useRef(false);
+  const tamano = useThree((estado) => estado.size);
+  const esMovil = tamano.width < 640;
   const [destinoTactil, setDestinoTactil] = useState<DestinoTactil | null>(null);
   const [vista, setVista] = useState<VistaId>('1');
   const [hoverModulo, setHoverModulo] = useState<ModuleId | null>(null);
@@ -369,18 +443,28 @@ export function MarsDioramaScene() {
         setVista(e.key);
       }
     };
-    window.addEventListener('keydown', alPresionar);
-    return () => window.removeEventListener('keydown', alPresionar);
-  }, []);
+    const alCambiarVistaHud = (ev: Event) => {
+      const nueva = (ev as CustomEvent<VistaId>).detail;
+      if (nueva === '1' || nueva === '2' || nueva === '3') {
+        setVista(nueva);
+      }
+    };
+    const alIrModuloHud = (ev: Event) => {
+      const mod = (ev as CustomEvent<ModuleId>).detail;
+      if (mod) {
+        setDestinoTactil((prev) => ({ modulo: mod, seq: (prev?.seq ?? 0) + 1 }));
+      }
+    };
 
-  useEffect(() => {
-    const config = VISTAS[vista];
-    camara.position.set(...config.posicion);
-    if (controlsRef.current) {
-      controlsRef.current.target.set(...config.target);
-      controlsRef.current.update();
-    }
-  }, [vista, camara]);
+    window.addEventListener('keydown', alPresionar);
+    window.addEventListener('space-junior:vista', alCambiarVistaHud);
+    window.addEventListener('space-junior:ir-modulo', alIrModuloHud);
+    return () => {
+      window.removeEventListener('keydown', alPresionar);
+      window.removeEventListener('space-junior:vista', alCambiarVistaHud);
+      window.removeEventListener('space-junior:ir-modulo', alIrModuloHud);
+    };
+  }, []);
 
   const seleccionarModulo = (id: ModuleId) => {
     setDestinoTactil((prev) => ({ modulo: id, seq: (prev?.seq ?? 0) + 1 }));
@@ -389,6 +473,7 @@ export function MarsDioramaScene() {
   return (
     <>
       <CamaraIsometrica />
+      <TransicionCamara vista={vista} controlsRef={controlsRef} animandoRef={animandoCamaraRef} />
       <Luces />
       <SolarStormVFX />
       <StormEffects />
@@ -397,17 +482,20 @@ export function MarsDioramaScene() {
         ref={controlsRef}
         makeDefault
         target={[0.1, 0.5, 0]}
-        enablePan={false}
+        enablePan={esMovil}
         enableRotate
         enableZoom
         enableDamping
         dampingFactor={0.08}
         rotateSpeed={0.65}
         zoomSpeed={0.75}
-        minPolarAngle={Math.PI / 2 - 1.05}
+        minPolarAngle={0.002}
         maxPolarAngle={Math.PI / 2 - 0.25}
         minZoom={ZOOM_MIN}
         maxZoom={ZOOM_MAX}
+        onStart={() => {
+          animandoCamaraRef.current = false;
+        }}
       />
 
       <group>
@@ -428,6 +516,7 @@ export function MarsDioramaScene() {
             moduloActual={moduloActual}
             hoverModulo={hoverModulo}
             esObjetivo={objetivoGuia === z.id}
+            energiaAsignada={estadoJuego.energiaAsignada[z.id] ?? 0}
             fallaTexto={obtenerFallaModulo(z.id, estadoJuego)}
             idioma={idioma}
             onSelect={seleccionarModulo}
